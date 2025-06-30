@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-service
+  labels:
+    app: news-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: news-service
+  template:
+    metadata:
+      labels:
+        app: news-service
+    spec:
+      containers:
+      - name: news-service
+        image: news-service:local
+        ports:
+        - containerPort: 8003
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres:5432/lifdb"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "news-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: news-service
+  labels:
+    app: news-service
+spec:
+  selector:
+    app: news-service
+  ports:
+  - port: 8003
+    targetPort: 8003
+    protocol: TCP
+  type: ClusterIP

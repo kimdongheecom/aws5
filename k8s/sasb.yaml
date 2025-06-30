@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sasb-service
+  labels:
+    app: sasb-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sasb-service
+  template:
+    metadata:
+      labels:
+        app: sasb-service
+    spec:
+      containers:
+      - name: sasb-service
+        image: sasb-service:local
+        ports:
+        - containerPort: 8004
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres:5432/lifdb"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "sasb-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sasb-service
+  labels:
+    app: sasb-service
+spec:
+  selector:
+    app: sasb-service
+  ports:
+  - port: 8004
+    targetPort: 8004
+    protocol: TCP
+  type: ClusterIP

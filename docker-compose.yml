@@ -1,0 +1,192 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    env_file:
+      - ./frontend/.env
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: always
+    networks:
+      - lif-network
+
+  news-service:
+    build: ./news-service
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./news-service/app:/app/app
+      - ./news-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./news-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=news-service
+    restart: always
+    networks:
+      - lif-network
+
+  sasb-service:
+    build: ./sasb-service
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./sasb-service/app:/app/app
+      - ./sasb-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./sasb-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=sasb-service
+    restart: always
+    networks:
+      - lif-network
+
+  issuepool-service:
+    build: ./issuepool-service
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./issuepool-service/app:/app/app
+      - ./issuepool-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./issuepool-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=issuepool-service
+    restart: always
+    networks:
+      - lif-network
+
+  report-service:
+    build: ./report-service
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./report-service/app:/app/app
+      - ./report-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./report-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=report-service
+    restart: always
+    networks:
+      - lif-network
+
+  stock-service:
+    build: ./stock-service
+    ports:
+      - "8007:8007"
+    volumes:
+      - ./stock-service/app:/app/app
+      - ./stock-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./stock-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=stock-service
+    restart: always
+    networks:
+      - lif-network
+
+  thesis-service:
+    build: ./thesis-service
+    ports:
+      - "8008:8008"
+    volumes:
+      - ./thesis-service/app:/app/app
+      - ./thesis-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./thesis-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=thesis-service
+    restart: always
+    networks:
+      - lif-network
+
+  gri-service:
+    build: ./gri-service
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./gri-service/app:/app/app
+      - ./gri-service/requirements.txt:/app/requirements.txt
+    env_file:
+      - ./gri-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_NAME=gri-service
+      - CUDA_VISIBLE_DEVICES=0
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - lif-network
+
+
+
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=lifdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - lif-network
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gateway:/app
+    env_file:
+      - ./gateway/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NEWS_SERVICE_URL=http://news-service:8003
+      - SASB_SERVICE_URL=http://sasb-service:8004
+      - ISSUEPOOL_SERVICE_URL=http://issuepool-service:8005
+      - REPORT_SERVICE_URL=http://report-service:8006
+      - STOCK_SERVICE_URL=http://stock-service:8007
+      - THESIS_SERVICE_URL=http://thesis-service:8008
+      - GRI_SERVICE_URL=http://gri-service:8010
+      - SERVICE_NAME=gateway
+    restart: always
+    depends_on:
+      - postgres
+      - news-service
+      - sasb-service
+      - issuepool-service
+      - report-service
+      - stock-service
+      - thesis-service
+      - gri-service
+    networks:
+      - lif-network
+
+networks:
+  lif-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

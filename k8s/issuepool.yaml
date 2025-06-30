@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issuepool-service
+  labels:
+    app: issuepool-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issuepool-service
+  template:
+    metadata:
+      labels:
+        app: issuepool-service
+    spec:
+      containers:
+      - name: issuepool-service
+        image: issuepool-service:local
+        ports:
+        - containerPort: 8005
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres:5432/lifdb"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "issuepool-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuepool-service
+  labels:
+    app: issuepool-service
+spec:
+  selector:
+    app: issuepool-service
+  ports:
+  - port: 8005
+    targetPort: 8005
+    protocol: TCP
+  type: ClusterIP

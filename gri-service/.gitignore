@@ -1,0 +1,134 @@
+# ==============================
+# 🔒 보안 관련 파일 (절대 업로드 금지)
+# ==============================
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.crt
+*.cer
+secrets.json
+config.json
+**/secrets/
+**/keys/
+
+# API Keys & Authentication
+api_keys.txt
+*.token
+auth.json
+credentials.json
+
+# ==============================
+# 📂 데이터 폴더 (용량 및 개인정보 보호)
+# ==============================
+data/
+/data
+data/**
+*.xlsx
+*.csv
+*.json
+*.sql
+!requirements.txt
+!package.json
+
+# ==============================
+# 🤖 AI/ML 모델 파일 (용량 제한)
+# ==============================
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.pkl
+*.pickle
+models/
+checkpoints/
+weights/
+*.model
+
+# ==============================
+# 🐍 Python 관련
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==============================
+# 🌐 가상환경
+# ==============================
+.venv/
+venv/
+ENV/
+env/
+.env/
+.ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==============================
+# 📝 IDE & 에디터 설정
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==============================
+# 📋 로그 & 임시 파일
+# ==============================
+*.log
+logs/
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==============================
+# 🐳 Docker 관련
+# ==============================
+docker-compose.override.yml
+.dockerignore
+
+# ==============================
+# 🔧 OS 관련
+# ==============================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==============================
+# 🚀 배포 관련
+# ==============================
+*.tar.gz
+*.zip
+*.rar

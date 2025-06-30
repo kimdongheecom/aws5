@@ -1,0 +1,163 @@
+# 1. 빌드
+docker build -t frontend:local ./frontend
+docker build -t gateway:local ./gateway
+docker build -t news-service:local ./news-service
+docker build -t sasb-service:local ./sasb-service
+docker build -t issuepool-service:local ./issuepool-service
+docker build -t report-service:local ./report-service
+docker build -t stock-service:local ./stock-service
+docker build -t thesis-service:local ./thesis-service
+
+# 2. 이미지 가져오기
+k3d image import frontend:local -c lif-cluster
+k3d image import gateway:local -c lif-cluster
+k3d image import news-service:local -c lif-cluster
+k3d image import sasb-service:local -c lif-cluster
+k3d image import issuepool-service:local -c lif-cluster
+k3d image import report-service:local -c lif-cluster
+k3d image import stock-service:local -c lif-cluster
+k3d image import thesis-service:local -c lif-cluster
+
+# 3. 쿠버네티스 배포 재시작 (롤링)
+kubectl rollout restart deployment frontend
+kubectl rollout restart deployment gateway
+kubectl rollout restart deployment news-service
+kubectl rollout restart deployment sasb-service
+kubectl rollout restart deployment issuepool-service
+kubectl rollout restart deployment report-service
+kubectl rollout restart deployment stock-service
+kubectl rollout restart deployment thesis-service
+
+# 4. 자동화 스크립트 실행
+cd k8s
+bash build-images.sh
+bash deploy.sh
+
+# 5. 개발 중 빠른 재배포 (특정 서비스만)
+# 예: gateway만 다시 빌드하고 배포하는 경우
+docker build -t gateway:local ./gateway
+k3d image import gateway:local -c lif-cluster
+kubectl rollout restart deployment gateway
+
+# 6. 전체 삭제 및 재배포
+kubectl delete -f .
+bash deploy.sh
+
+# 7. 로그 확인
+kubectl logs -f deployment/gateway
+kubectl logs -f deployment/frontend
+
+# 8. 상태 확인
+kubectl get pods
+kubectl get services
+kubectl get ingress
+
+
+
+
+# pod 상태 확인
+kubectl get pods
+
+#클러스터 이름 확인
+k3d cluster list
+
+
+
+Kubernetes Pod 및 리소스 삭제:
+
+# 1. k8s 디렉토리의 모든 리소스 삭제
+kubectl delete -f .
+
+# 2. 특정 네임스페이스의 모든 Pod 삭제
+kubectl delete pods --all
+
+# 3. 모든 deployment 삭제
+kubectl delete deployments --all
+
+# 4. 모든 서비스 삭제
+kubectl delete services --all
+
+# 5. 모든 ingress 삭제
+kubectl delete ingress --all
+
+
+Docker 이미지 삭제:
+
+# 1. :local 태그가 붙은 모든 이미지 삭제
+docker rmi $(docker images --filter "reference=*:local" -q)
+
+# 2. 또는 개별적으로 삭제
+docker rmi frontend:local gateway:local news-service:local sasb-service:local issuepool-service:local report-service:local stock-service:local thesis-service:local
+
+# 3. 사용하지 않는 모든 이미지 정리
+docker image prune -a
+
+# 4. 전체 시스템 정리 (주의!)
+docker system prune -a --volumes
+
+
+
+k3d 클러스터 완전 삭제 및 재생성:
+
+
+
+# 1. 클러스터 삭제
+k3d cluster delete my-cluster
+
+# 2. 새 클러스터 생성
+k3d cluster create my-cluster
+
+# 3. kubectl 컨텍스트 확인
+kubectl config current-context
+
+
+추천하는 순서:
+
+# 1. Kubernetes 리소스 삭제
+kubectl delete -f .
+
+# 2. Docker 이미지 삭제
+docker rmi $(docker images --filter "reference=*:local" -q)
+
+# 3. 다시 빌드 및 배포
+bash build-images.sh
+bash deploy.sh
+
+# WSL(Ubuntu)로 다시 들어가는 방법
+wsl -d Ubuntu
+
+# frontend만 재시작 명령어
+kubectl --kubeconfig=k3d-config.yaml rollout restart deployment/frontend
+
+
+# Frontend 이미지 다시 빌드
+cd frontend && docker build -t frontend:local .
+
+# Frontend를 재시작
+kubectl --kubeconfig=k3d-config.yaml rollout restart deployment/frontend
+
+
+# 확인하기기
+kubectl get pods
+kubectl logs -f deployment/frontend
+
+
+
+1. 제일 쉬운단계
+kubectl --kubeconfig=k3d-config.yaml rollout restart deployment/Frontend
+
+2. 중간 단계(pod를 삭제하기 및 pod 다시 생성하기 및 실행하기기)
+kubectl --kubeconfig=k3d-config.yaml delete pod frontend-7f9b8d786c-r2cq7
+kubectl --kubeconfig=k3d-config.yaml apply -f k8s/frontend.yaml
+kubectl --kubeconfig=k3d-config.yaml rollout restart deployment/Frontend
+
+3. 어려운 단계
+
+kubectl --kubeconfig=k3d-config.yaml delete pod frontend-f8449fd8f-ntqs7
+docker images
+docker rmi -f frontend:local
+docker build -t frontend:local .
+k3d image import frontend:local -c mycluster1
+kubectl --kubeconfig=k3d-config.yaml apply -f k8s/frontend.yaml
+kubectl --kubeconfig=k3d-config.yaml rollout restart deployment/Frontend
+

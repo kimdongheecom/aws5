@@ -1,0 +1,23 @@
+# 루트 또는 sasb-service/.gitignore
+sasb-service/.env
+issuepool-service/.env
+news-service/.env
+gateway/.env
+frontend/.env
+stock-service/.env
+report-service/.env
+thesis-service/.env
+
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Kubernetes secrets (민감한 정보 포함)
+k8s/*-secret.yaml
+k8s/secrets/
+*.secret.yaml
+
+

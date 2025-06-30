@@ -1,0 +1,14 @@
+<svg width="120" height="auto" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- L 세로 부분 -->
+  <path d="M20 10H10V50H20V10Z" fill="#009089"/>
+  <!-- L 가로 부분 -->
+  <path d="M40 40H10V50H40V40Z" fill="#009089"/>
+  <!-- I 세로 부분 -->
+  <path d="M60 10H50V50H60V10Z" fill="#009089"/>
+  <!-- F 세로 부분 -->
+  <path d="M80 10H70V50H80V10Z" fill="#009089"/>
+  <!-- F 상단 가로 부분 -->
+  <path d="M100 10H70V20H110V10Z" fill="#009089"/>
+  <!-- F 중간 가로 부분 -->
+  <path d="M95 25H70V35H105V25Z" fill="#009089"/>
+</svg> 

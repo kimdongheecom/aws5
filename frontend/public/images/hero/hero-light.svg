@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="570" viewBox="0 0 1440 570" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip0_1_2)">
+    <!-- 배경 그라데이션 -->
+    <rect width="1440" height="570" fill="url(#paint0_linear_1_2)"/>
+    
+    <!-- 메인 타이틀 -->
+    <text x="720" y="150" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#0A2540" text-anchor="middle">ESG &amp; Financial Data Analytics</text>
+    <text x="720" y="200" font-family="Arial, sans-serif" font-size="24" fill="#2B4F72" text-anchor="middle">신뢰할 수 있는 데이터 기반 금융 인사이트 제공</text>
+    
+    <!-- 안정적인 금융 그래프 -->
+    <path d="M100 400 Q 250 320, 400 370 T 700 340 T 1000 360 T 1300 320 T 1500 350" stroke="#0A2540" stroke-width="3" fill="none"/>
+    <path d="M100 430 Q 300 380, 500 410 T 900 380 T 1200 400 T 1500 370" stroke="#4B9CD3" stroke-width="3" fill="none"/>
+    
+    <!-- 주요 데이터 포인트 -->
+    <circle cx="400" cy="370" r="8" fill="#0A2540"/>
+    <circle cx="700" cy="340" r="8" fill="#0A2540"/>
+    <circle cx="1000" cy="360" r="8" fill="#0A2540"/>
+    <circle cx="1300" cy="320" r="8" fill="#0A2540"/>
+    
+    <circle cx="500" cy="410" r="8" fill="#4B9CD3"/>
+    <circle cx="900" cy="380" r="8" fill="#4B9CD3"/>
+    <circle cx="1200" cy="400" r="8" fill="#4B9CD3"/>
+    
+    <!-- ESG 차트 시각화 -->
+    <!-- E: Environment -->
+    <g transform="translate(300, 300)">
+      <circle cx="0" cy="0" r="60" fill="#F8F9FA" stroke="#E9ECEF" stroke-width="2"/>
+      <path d="M0 0 L0 -60 A60 60 0 0 1 51.96 30 Z" fill="#4B9CD3" opacity="0.9"/>
+      <text x="0" y="10" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#0A2540" text-anchor="middle">E</text>
+    </g>
+    
+    <!-- S: Social -->
+    <g transform="translate(450, 300)">
+      <circle cx="0" cy="0" r="60" fill="#F8F9FA" stroke="#E9ECEF" stroke-width="2"/>
+      <path d="M0 0 L0 -60 A60 60 0 0 1 30 51.96 Z" fill="#4B9CD3" opacity="0.9"/>
+      <text x="0" y="10" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#0A2540" text-anchor="middle">S</text>
+    </g>
+    
+    <!-- G: Governance -->
+    <g transform="translate(600, 300)">
+      <circle cx="0" cy="0" r="60" fill="#F8F9FA" stroke="#E9ECEF" stroke-width="2"/>
+      <path d="M0 0 L-51.96 30 A60 60 0 0 1 -30 -51.96 Z" fill="#4B9CD3" opacity="0.9"/>
+      <text x="0" y="10" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#0A2540" text-anchor="middle">G</text>
+    </g>
+    
+    <!-- AI 분석 시각화 -->
+    <g transform="translate(1000, 280)">
+      <rect x="-120" y="-80" width="240" height="160" rx="10" fill="#F8F9FA" stroke="#E9ECEF" stroke-width="2"/>
+      
+      <!-- 데이터 분석 라인 -->
+      <line x1="-100" y1="0" x2="100" y2="0" stroke="#E9ECEF" stroke-width="2"/>
+      <line x1="-100" y1="-30" x2="100" y2="-30" stroke="#E9ECEF" stroke-width="2"/>
+      <line x1="-100" y1="30" x2="100" y2="30" stroke="#E9ECEF" stroke-width="2"/>
+      
+      <!-- 데이터 점수 표시 -->
+      <circle cx="-50" cy="0" r="6" fill="#4B9CD3"/>
+      <circle cx="0" cy="-30" r="6" fill="#4B9CD3"/>
+      <circle cx="50" cy="30" r="6" fill="#4B9CD3"/>
+      
+      <!-- 연결선 -->
+      <path d="M-50 0 L0 -30 L50 30" stroke="#0A2540" stroke-width="2" fill="none"/>
+      
+      <!-- AI 라벨 -->
+      <text x="0" y="70" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0A2540" text-anchor="middle">AI 분석</text>
+    </g>
+  </g>
+  
+  <defs>
+    <linearGradient id="paint0_linear_1_2" x1="720" y1="0" x2="720" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5F7FA"/>
+    </linearGradient>
+    <clipPath id="clip0_1_2">
+      <rect width="1440" height="570" fill="white"/>
+    </clipPath>
+  </defs>
+</svg>

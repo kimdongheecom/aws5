@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thesis-service
+  labels:
+    app: thesis-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thesis-service
+  template:
+    metadata:
+      labels:
+        app: thesis-service
+    spec:
+      containers:
+      - name: thesis-service
+        image: thesis-service:local
+        ports:
+        - containerPort: 8008
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres:5432/lifdb"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "thesis-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thesis-service
+  labels:
+    app: thesis-service
+spec:
+  selector:
+    app: thesis-service
+  ports:
+  - port: 8008
+    targetPort: 8008
+    protocol: TCP
+  type: ClusterIP
