@@ -1,28 +1,32 @@
 # requirements.txt
-# --- Web Service Backend (사용자 지정 버전 유지) ---
-fastapi==0.110.0          # 👈 사용자 지정 버전으로 유지
-uvicorn[standard]==0.27.1   # 👈 사용자 지정 버전으로 유지
-pydantic==2.6.3            # 👈 사용자 지정 버전으로 유지
-python-dotenv==1.0.1
-requests==2.31.0
-python-multipart==0.0.7
 
-# --- Database (기존 설정 유지) ---
-sqlalchemy==2.0.27
-psycopg2-binary==2.9.9
+fastapi==0.115.6  # Python 3.12.7 호환 최신 버전
+uvicorn[standard]==0.32.1  # 최신 안정 버전  
+pydantic==2.10.3  # Python 3.12.7 최적화 버전
+python-dotenv==1.0.1  # 안정 버전 유지
+requests==2.32.3  # 최신 보안 업데이트 버전
+python-multipart==0.0.20  # 최신 안정 버전
 
-# --- AI Model & GPU Inference (Llama3, RTX 5060, CUDA 12.1 호환) ---
-transformers==4.42.3
-accelerate==0.31.0
-bitsandbytes==0.43.1
-huggingface-hub==0.23.4  # 기존 0.23.3에서 호환성을 위해 소폭 상승
+# --- Database (Python 3.12.7 호환) ---
+sqlalchemy==2.0.36  # 최신 안정 버전
+psycopg2-binary==2.9.10  # 최신 안정 버전
 
-# --- Elasticsearch & Data Handling (신규 추가) ---
-elasticsearch==8.14.0
-pandas==2.2.2
-openpyxl==3.1.2
+# --- AI Model & GPU Inference (Llama3, RTX 5060, CUDA 12.8 호환) ---
+# PyTorch는 Dockerfile에서 nightly 버전으로 설치
+torch>=2.5.0  # CUDA 12.8 지원을 위한 최소 버전
+transformers==4.46.3  # 최신 안정 버전
+accelerate==1.2.1  # CUDA 12.8 호환 최신 버전
+bitsandbytes==0.45.0  # CUDA 12.8 지원 버전
+huggingface-hub==0.26.5  # 최신 안정 버전
+peft==0.15.2  # LoRA/어댑터 훈련을 위한 PEFT 라이브러리
+datasets==3.2.0  # Hugging Face 데이터셋 라이브러리
 
-# --- Tokenizer & Utilities (기존 설정 유지 및 호환성) ---
-sentencepiece==0.2.0
-protobuf==4.25.3
-numpy==1.26.4
+# --- Elasticsearch & Data Handling (Python 3.12.7 호환) ---
+elasticsearch==8.17.0  # 최신 안정 버전
+pandas==2.2.3  # Python 3.12.7 호환 최신 버전
+openpyxl==3.1.5  # 최신 안정 버전
+
+# --- Tokenizer & Utilities (Python 3.12.7 및 CUDA 12.8 호환) ---
+sentencepiece==0.2.0  # 안정 버전 유지
+protobuf==5.29.2  # 최신 안정 버전
+numpy==2.1.3  # Python 3.12.7 최적화 버전

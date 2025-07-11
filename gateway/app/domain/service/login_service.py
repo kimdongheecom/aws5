@@ -5,7 +5,8 @@ import httpx
 import os
 import shortuuid
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
+from urllib.parse import urlencode
 
 
 class LoginService:
@@ -19,6 +20,94 @@ class LoginService:
         """서비스 초기화 작업"""
         # 테이블 초기화
         await self.repository.init_table()
+    
+    async def get_google_auth_url(self, redirect_uri: str) -> str:
+        """Google OAuth 인증 URL을 생성합니다"""
+        client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+        if not client_id:
+            raise ValueError("GOOGLE_CLIENT_ID not configured")
+        
+        callback_uri = f"{os.getenv('GATEWAY_URL', 'http://localhost:8080')}/auth/google/callback"
+        
+        params = {
+            'client_id': client_id,
+            'redirect_uri': callback_uri,
+            'response_type': 'code',
+            'scope': 'email profile',
+            'access_type': 'offline',
+            'prompt': 'consent',
+            'state': redirect_uri  # 최종 리다이렉트 URI를 state로 전달
+        }
+        
+        auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+        return auth_url
+    
+    async def handle_google_callback(self, code: str, state: str) -> Dict[str, Any]:
+        """Google OAuth 콜백을 처리합니다"""
+        try:
+            # 토큰 교환
+            token_response = await self._exchange_code_for_token('google', code)
+            
+            if not token_response or 'access_token' not in token_response:
+                raise Exception("Failed to get token from Google")
+            
+            # 사용자 정보 조회
+            user_info = await self._get_google_user_info(token_response['access_token'])
+            
+            if not user_info:
+                raise Exception("Failed to get user info from Google")
+            
+            # Login 정보 저장
+            login_entity = LoginEntity(
+                id=shortuuid.uuid(),
+                provider='google',
+                access_token=token_response['access_token'],
+                refresh_token=token_response.get('refresh_token'),
+                expires_at=datetime.now() + timedelta(seconds=token_response.get('expires_in', 3600)),
+                created_at=datetime.now()
+            )
+            
+            await self.repository.save_login(login_entity)
+            
+            return {
+                'access_token': login_entity.access_token,
+                'user_info': user_info,
+                'redirect_uri': state
+            }
+            
+        except Exception as e:
+            print(f"Error handling Google callback: {e}")
+            raise e
+
+    async def get_user_profile(self, access_token: str) -> Dict[str, Any]:
+        """액세스 토큰으로 사용자 프로필을 조회합니다"""
+        try:
+            user_info = await self._get_google_user_info(access_token)
+            if not user_info:
+                raise Exception("Failed to get user info")
+            return user_info
+        except Exception as e:
+            print(f"Error getting user profile: {e}")
+            raise e
+    
+    async def _get_google_user_info(self, access_token: str) -> dict:
+        """Google 사용자 정보를 조회합니다"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    'https://www.googleapis.com/oauth2/v2/userinfo',
+                    headers={'Authorization': f'Bearer {access_token}'}
+                )
+                
+                if response.status_code != 200:
+                    print(f"Error getting user info: {response.text}")
+                    return {}
+                
+                return response.json()
+                
+        except Exception as e:
+            print(f"Error getting user info: {e}")
+            return {}
     
     async def get_login_by_id(self, id: str) -> Optional[LoginEntity]:
         """ID로 Login 정보를 조회합니다"""
@@ -120,6 +209,9 @@ class LoginService:
             
             if redirect_uri:
                 data['redirect_uri'] = redirect_uri
+            else:
+                # Google OAuth의 경우 기본 콜백 URI 설정
+                data['redirect_uri'] = f"{os.getenv('GATEWAY_URL', 'http://localhost:8080')}/auth/google/callback"
             
             # 토큰 요청
             async with httpx.AsyncClient() as client:
@@ -167,19 +259,19 @@ class LoginService:
         """Login 제공자별 설정 정보를 가져옵니다"""
         if provider.lower() == 'google':
             return (
-                'https://login2.googleapis.com/token',
+                'https://oauth2.googleapis.com/token',
                 os.getenv('GOOGLE_CLIENT_ID', ''),
                 os.getenv('GOOGLE_CLIENT_SECRET', '')
             )
         elif provider.lower() == 'facebook':
             return (
-                'https://graph.facebook.com/v16.0/login/access_token',
+                'https://graph.facebook.com/v16.0/oauth/access_token',
                 os.getenv('FACEBOOK_CLIENT_ID', ''),
                 os.getenv('FACEBOOK_CLIENT_SECRET', '')
             )
         elif provider.lower() == 'github':
             return (
-                'https://github.com/login/login/access_token',
+                'https://github.com/login/oauth/access_token',
                 os.getenv('GITHUB_CLIENT_ID', ''),
                 os.getenv('GITHUB_CLIENT_SECRET', '')
             )

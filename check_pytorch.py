@@ -1,25 +1,19 @@
 import torch
 
-print("=== PyTorch Nightly 빌드 확인 ===")
-print(f"PyTorch version: {torch.__version__}")
-print(f"CUDA available: {torch.cuda.is_available()}")
-print(f"CUDA version: {torch.version.cuda}")
+# 1. PyTorch 버전 출력 (뒤에 +cu121이 붙어있는지 확인)
+print(f"PyTorch 버전: {torch.__version__}")
+print("-" * 40)
 
-if torch.cuda.is_available():
-    print(f"CUDA device count: {torch.cuda.device_count()}")
-    print(f"Current device: {torch.cuda.current_device()}")
-    print(f"Device name: {torch.cuda.get_device_name(0)}")
-    
-    # CUDA capability 확인
-    device = torch.device('cuda')
-    capability = torch.cuda.get_device_capability(device)
-    print(f"CUDA capability: sm_{capability[0]}{capability[1]}")
-    
-    # 간단한 텐서 테스트
-    print("\n=== GPU 텐서 테스트 ===")
-    x = torch.randn(3, 3).cuda()
-    y = torch.randn(3, 3).cuda()
-    z = x @ y
-    print(f"GPU 행렬 곱셈 테스트 성공: {z.shape}")
+# 2. CUDA 사용 가능 여부 확인 (가장 중요!)
+is_cuda_available = torch.cuda.is_available()
+print(f"CUDA 사용 가능 여부: {is_cuda_available}")
+
+# 3. 사용 가능하다면, 세부 정보 출력
+if is_cuda_available:
+    print(f"연결된 GPU 개수: {torch.cuda.device_count()}")
+    print(f"현재 GPU 이름: {torch.cuda.get_device_name(0)}")
+    print("✅ GPU를 사용할 수 있습니다!")
 else:
-    print("CUDA가 사용 불가능합니다.") 
+    print("오류: PyTorch가 GPU를 인식하지 못했습니다.")
+
+print("-" * 40)

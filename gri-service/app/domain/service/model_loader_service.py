@@ -3,10 +3,17 @@
 import torch
 import logging
 import os
+import traceback
+from typing import Union, Optional, Any, Dict
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from transformers.utils.quantization_config import BitsAndBytesConfig
 from huggingface_hub import snapshot_download
-from app.foundation.config import MODEL_ID, MODEL_PATH
+
+# PEFT 관련 import (Optional 처리)
+from peft import PeftModel
+
+
+
+from app.foundation.config import MODEL_ID, MODEL_PATH, ADAPTERS_PATH, DEFAULT_ADAPTER, GRI_ADAPTER_CONFIG
 
 # RTX 5060 (Ada Lovelace) 호환성 설정
 os.environ["TORCH_CUDA_ARCH_LIST"] = "9.0"
@@ -30,12 +37,19 @@ class ModelLoaderService:
     def __init__(self):
         if self._initialized:
             return
-        self.model = None
-        self.tokenizer = None
+        # 타입 힌트 명시 (실용적 접근)
+        self.model: Optional[Any] = None  # transformers/peft 모델들의 복잡한 타입 구조로 인해 Any 사용
+        self.tokenizer: Optional[Any] = None  # AutoTokenizer의 동적 속성으로 인해 Any 사용
+        self.current_adapter: Optional[str] = None
+        self.adapters_loaded: Dict[str, bool] = {}  # 로딩된 어댑터들을 캐시
         # RTX 5060을 강제로 사용
         self.device = "cuda"
         self._initialized = True
         logger.info(f"ModelLoaderService 초기화 (Device: {self.device})")
+        
+    def _check_peft_available(self) -> bool:
+        """PEFT 라이브러리 사용 가능 여부 확인"""
+        return True
         
     def _download_model_if_not_exists(self):
         """지정된 경로에 모델이 없으면 다운로드합니다."""
@@ -86,19 +100,120 @@ class ModelLoaderService:
             
             self.tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
             
-            if self.tokenizer.pad_token is None:
-                self.tokenizer.pad_token = self.tokenizer.eos_token
+            # 토크나이저 패딩 토큰 설정 (안전한 속성 접근)
+            pad_token = getattr(self.tokenizer, 'pad_token', None)
+            if pad_token is None:
+                eos_token = getattr(self.tokenizer, 'eos_token', None)
+                if eos_token is not None:
+                    setattr(self.tokenizer, 'pad_token', eos_token)
                 
             logger.info("✅ 모델 및 토크나이저 로딩 완료!")
+            
+            # 기본 LoRA 어댑터 로딩 시도
+            if GRI_ADAPTER_CONFIG["enabled"]:
+                self._load_default_adapter()
             
         except Exception as e:
             logger.error(f"❌ 모델 로딩 실패: {e}", exc_info=True)
             raise
 
+    def _load_default_adapter(self):
+        """기본 GRI 어댑터를 로딩합니다."""
+        try:
+            adapter_path = ADAPTERS_PATH / DEFAULT_ADAPTER
+            if adapter_path.exists() and any(adapter_path.glob("*.safetensors")):
+                logger.info(f"🔧 기본 LoRA 어댑터 로딩 중: {DEFAULT_ADAPTER}")
+                self.load_adapter(DEFAULT_ADAPTER)
+                logger.info(f"✅ 기본 어댑터 '{DEFAULT_ADAPTER}' 로딩 완료!")
+            else:
+                logger.info(f"⚠️ 기본 어댑터 '{DEFAULT_ADAPTER}'가 없습니다. 베이스 모델로 시작합니다.")
+        except Exception as e:
+            logger.warning(f"⚠️ 기본 어댑터 로딩 실패, 베이스 모델 사용: {e}")
+
+    def load_adapter(self, adapter_name: str):
+        """특정 LoRA 어댑터를 로딩합니다."""
+        if not self._check_peft_available():
+            raise RuntimeError("PEFT 라이브러리가 필요합니다.")
+            
+        if not self.model:
+            raise RuntimeError("베이스 모델이 먼저 로드되어야 합니다.")
+        
+        adapter_path = ADAPTERS_PATH / adapter_name
+        if not adapter_path.exists():
+            raise FileNotFoundError(f"어댑터 폴더를 찾을 수 없습니다: {adapter_path}")
+        
+        try:
+            # 기존 어댑터가 있으면 제거
+            if self.current_adapter:
+                logger.info(f"🔄 기존 어댑터 '{self.current_adapter}' 제거 중...")
+                self.unload_adapter()
+            
+            logger.info(f"🔧 LoRA 어댑터 로딩 중: {adapter_name}")
+            
+            # PEFT 모델로 변환 (어댑터 로딩) - 안전한 타입 처리
+            self.model = PeftModel.from_pretrained(  # type: ignore
+                self.model, 
+                adapter_path,
+                is_trainable=False,
+                device_map="auto"
+            )
+            
+            self.current_adapter = adapter_name
+            self.adapters_loaded[adapter_name] = True
+            
+            logger.info(f"✅ LoRA 어댑터 '{adapter_name}' 로딩 완료!")
+            
+        except Exception as e:
+            logger.error(f"❌ 어댑터 '{adapter_name}' 로딩 실패: {e}")
+            raise
+
+    def unload_adapter(self):
+        """현재 로딩된 LoRA 어댑터를 제거합니다."""
+        if not self.current_adapter:
+            logger.info("제거할 어댑터가 없습니다.")
+            return
+        
+        try:
+            logger.info(f"🗑️ 어댑터 '{self.current_adapter}' 제거 중...")
+            
+            # PEFT 모델에서 베이스 모델로 되돌리기 (안전한 속성 접근)
+            if hasattr(self.model, 'unload') and callable(getattr(self.model, 'unload')):
+                self.model.unload()  # type: ignore
+            elif hasattr(self.model, 'base_model'):
+                self.model = getattr(self.model, 'base_model')  # type: ignore
+            
+            self.current_adapter = None
+            logger.info("✅ 어댑터 제거 완료!")
+            
+        except Exception as e:
+            logger.error(f"❌ 어댑터 제거 실패: {e}")
+            raise
+
+    def switch_adapter(self, adapter_name: str):
+        """다른 LoRA 어댑터로 전환합니다."""
+        if self.current_adapter == adapter_name:
+            logger.info(f"이미 '{adapter_name}' 어댑터가 로딩되어 있습니다.")
+            return
+        
+        logger.info(f"🔄 어댑터 전환: {self.current_adapter} → {adapter_name}")
+        self.load_adapter(adapter_name)
+
+    def get_adapter_info(self):
+        """현재 어댑터 정보를 반환합니다."""
+        return {
+            "current_adapter": self.current_adapter,
+            "available_adapters": list(self.adapters_loaded.keys()),
+            "adapter_config": GRI_ADAPTER_CONFIG if self.current_adapter == DEFAULT_ADAPTER else None
+        }
+
     def generate(self, prompt: str, max_new_tokens: int = 256) -> str:
         """프롬프트로 텍스트를 생성합니다."""
         if not self.model or not self.tokenizer:
             raise RuntimeError("모델이 로드되지 않았습니다.")
+        
+        # 현재 어댑터 정보 로깅
+        adapter_info = f" (어댑터: {self.current_adapter})" if self.current_adapter else " (베이스 모델)"
+        logger.info(f"🤖 텍스트 생성 시작{adapter_info}")
             
         # KoAlpaca 대화형 프롬프트 템플릿 구성
         conversation_prompt = f"""### 질문: {prompt}
@@ -114,15 +229,20 @@ class ModelLoaderService:
         with torch.no_grad():
             # RTX 5060 호환성을 위한 안전한 생성 설정
             try:
-                outputs = self.model.generate(
+                # 모델의 generate 메서드 안전하게 호출
+                generate_method = getattr(self.model, 'generate', None)
+                if generate_method is None or not callable(generate_method):
+                    raise RuntimeError("모델에 generate 메서드가 없습니다.")
+                
+                outputs = generate_method(  # type: ignore
                     **inputs, 
                     max_new_tokens=max_new_tokens,
                     do_sample=True,
                     temperature=0.7,
                     top_p=0.9,
                     repetition_penalty=1.1,
-                    pad_token_id=self.tokenizer.eos_token_id,
-                    eos_token_id=self.tokenizer.eos_token_id,
+                    pad_token_id=getattr(self.tokenizer, 'eos_token_id', None),
+                    eos_token_id=getattr(self.tokenizer, 'eos_token_id', None),
                     use_cache=True,
                     output_attentions=False,
                     output_hidden_states=False,
@@ -131,18 +251,18 @@ class ModelLoaderService:
                 if "no kernel image is available" in str(e):
                     logger.warning("CUDA 커널 호환성 문제 감지. 대체 방법으로 시도합니다...")
                     # 더 안전한 설정으로 재시도
-                    outputs = self.model.generate(
+                    outputs = generate_method(  # type: ignore
                         **inputs, 
                         max_new_tokens=min(max_new_tokens, 50),  # 토큰 수 제한
                         do_sample=False,  # 그리디 디코딩
-                        pad_token_id=self.tokenizer.eos_token_id,
-                        eos_token_id=self.tokenizer.eos_token_id,
+                        pad_token_id=getattr(self.tokenizer, 'eos_token_id', None),
+                        eos_token_id=getattr(self.tokenizer, 'eos_token_id', None),
                         use_cache=False,
                     )
                 else:
                     raise
         
-        response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)  # type: ignore
         # 프롬프트 부분을 제외하고 답변만 반환
         answer_start = response_text.find("### 답변:") + len("### 답변:")
         answer = response_text[answer_start:].strip()
@@ -170,6 +290,5 @@ if __name__ == "__main__":
         
     except Exception as e:
         # 오류 발생 시 더 자세한 정보를 볼 수 있도록 traceback 추가
-        import traceback
         print(f"\n🔥🔥🔥 테스트 실패! 오류가 발생했습니다: {e} 🔥🔥🔥")
         traceback.print_exc()

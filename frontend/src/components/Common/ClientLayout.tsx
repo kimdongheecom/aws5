@@ -1,34 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
-// import Footer from "@/components/Footer";
-// import Header from "@/components/Header";
-import Lines from "@/components/Lines";
 import ScrollToTop from "@/components/ScrollToTOp";
 import { ThemeProvider } from "next-themes";
-import { initializeAuth } from "@/store/authStore";
+import { useAuthStore } from '@/domain/auth/store/auth.store';
+import Navigation from "@/components/Navigation";
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // 인증 상태 초기화
-  useEffect(() => {
-    initializeAuth();
-  }, []);
+  const { initializeAuth } = useAuthStore();
 
   return (
-    <ThemeProvider
-      enableSystem={false}
-      attribute="class"
-      defaultTheme="light"
-    >
-      <Lines />
-      {/* {!isHomePage && <Header />} */}
-      {children}
-      {/* Footer는 layout.tsx에서 관리하므로 여기서는 제거 */}
+    <ThemeProvider attribute="class">
       <ScrollToTop />
+      <Navigation />
+      <main className="pt-14">
+        {children}
+      </main>
     </ThemeProvider>
   );
 } 

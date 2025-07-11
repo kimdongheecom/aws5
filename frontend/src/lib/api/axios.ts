@@ -1,8 +1,8 @@
 'use client';
 import axios from 'axios';
-import { getSession } from 'next-auth/react';
 import { getAccessToken, isTokenExpired } from './authToken';
-import { authService } from '@/services/authService';
+
+import { useAuthStore } from '@/domain/auth/store/auth.store';
 
 // axios 타입 직접 정의
 interface AxiosRequestConfig {
@@ -59,7 +59,8 @@ export const axiosInstance = axios.create({
 // 요청 인터셉터 설정 (인증 토큰 첨부)
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const session = await getSession();
+    // Zustand 스토어에서 현재 인증 상태 가져오기
+    const authState = useAuthStore.getState();
     
     // URL 결정: /api/로 시작하면 프론트엔드 직접 호출, 아니면 Gateway 통해 호출
     if (config.url?.startsWith('/api/')) {
@@ -69,8 +70,8 @@ axiosInstance.interceptors.request.use(
     }
     
     // 인증 토큰이 있는 경우 요청 헤더에 추가
-    if (session?.accessToken && config.headers) {
-      config.headers['Authorization'] = `Bearer ${session.accessToken}`;
+    if (authState.accessToken && config.headers) {
+      config.headers['Authorization'] = `Bearer ${authState.accessToken}`;
     }
     
     return config;

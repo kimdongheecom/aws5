@@ -19,6 +19,7 @@ kubectl apply -f issuepool.yaml
 kubectl apply -f report.yaml
 kubectl apply -f stock.yaml
 kubectl apply -f thesis.yaml
+kubectl apply -f gri.yaml
 
 # 백엔드 서비스들이 준비될 때까지 대기
 echo "⏳ 백엔드 서비스들 준비 대기 중..."
@@ -29,6 +30,7 @@ kubectl wait --for=condition=ready pod -l app=issuepool-service --timeout=60s
 kubectl wait --for=condition=ready pod -l app=report-service --timeout=60s
 kubectl wait --for=condition=ready pod -l app=stock-service --timeout=60s
 kubectl wait --for=condition=ready pod -l app=thesis-service --timeout=60s
+kubectl wait --for=condition=ready pod -l app=gri-service --timeout=60s
 
 # 3. 프론트엔드 배포
 echo "📦 프론트엔드 배포 중..."

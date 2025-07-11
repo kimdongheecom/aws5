@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuthStore } from '@/domain/auth/store/auth.store';
 import Navigation from '@/components/Navigation';
 
 export default function ProfileLayout({
@@ -11,30 +11,21 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { status } = useSession();
+  const { userId } = useAuthStore();
+  
+  // 인증 상태 판단
+  const isAuthenticated = !!userId;
 
   // 인증 상태 확인
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!isAuthenticated) {
       console.log('인증되지 않은 상태, 로그인 페이지로 리다이렉션...');
       router.replace('/auth/login');
     }
-  }, [status, router]);
-
-  // 로딩 중 상태 처리
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-          <p className="mt-2">세션 정보를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [isAuthenticated, router]);
 
   // 인증되지 않은 경우
-  if (status === 'unauthenticated') {
+  if (!isAuthenticated) {
     return null;
   }
 

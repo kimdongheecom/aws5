@@ -1,18 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { ProfileCard } from '@/features/profile/components/ProfileCard';
-import { ProfileForm } from '@/features/profile/components/ProfileForm';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/domain/auth/store/auth.store';
+import { ProfileCard } from '@/domain/profile/components/ProfileCard';
+import { ProfileForm } from '@/domain/profile/components/ProfileForm';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'info' | 'edit'>('info');
-  const { data: session } = useSession();
   const { userId, name, email, role } = useAuthStore();
   
-  console.log('프로필 페이지 - 세션 정보:', session);
   console.log('프로필 페이지 - 스토어 정보:', { userId, name, email, role });
   
   // Tab 변경 핸들러

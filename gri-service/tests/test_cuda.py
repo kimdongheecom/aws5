@@ -1,6 +1,11 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
+import sys
+
+# config.py에서 모델 ID 가져오기
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.foundation.config import MODEL_ID
 
 def check_cuda():
     print("=== CUDA 상태 확인 ===")
@@ -9,14 +14,14 @@ def check_cuda():
         print(f"CUDA device count: {torch.cuda.device_count()}")
         print(f"Current device: {torch.cuda.current_device()}")
         print(f"Device name: {torch.cuda.get_device_name(0)}")
-        print(f"CUDA version: {torch.version.cuda}")
+        print("✅ CUDA를 사용할 수 있습니다!")
     else:
         print("CUDA가 사용 불가능합니다.")
     print()
 
 def download_koalpaca_model():
-    print("=== KoAlpaca-Polyglot-1.3B 모델 다운로드 ===")
-    model_name = "beomi/KoAlpaca-Polyglot-1.3B"
+    print(f"=== {MODEL_ID} 모델 다운로드 ===")
+    model_name = MODEL_ID
     
     try:
         print(f"모델 다운로드 시작: {model_name}")
@@ -44,6 +49,10 @@ def download_koalpaca_model():
         print("\n=== 간단한 테스트 ===")
         test_input = "안녕하세요, 저는"
         inputs = tokenizer(test_input, return_tensors="pt")
+        
+        # token_type_ids 제거 (일부 모델에서 지원하지 않음)
+        if 'token_type_ids' in inputs:
+            del inputs['token_type_ids']
         
         if device == "cuda":
             inputs = {k: v.to(device) for k, v in inputs.items()}

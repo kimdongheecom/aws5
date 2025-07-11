@@ -36,6 +36,8 @@ spec:
           value: "http://stock-service:8007"
         - name: THESIS_SERVICE_URL
           value: "http://thesis-service:8008"
+        - name: GRI_SERVICE_URL
+          value: "http://gri-service:8010"
         - name: SERVICE_NAME
           value: "gateway"
         resources:

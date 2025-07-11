@@ -5,5 +5,5 @@ from datetime import datetime
 
 # ✅ Finance 요청용 Pydantic 모델
 class FinanceRequest(BaseModel):
-    company_name: str = Field(..., description="회사명", example="샘플전자")
+    company_name: str = Field(description="회사명", examples=["샘플전자"])
     

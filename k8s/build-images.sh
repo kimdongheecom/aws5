@@ -45,6 +45,11 @@ echo "📦 Thesis 서비스 빌드 중..."
 docker build -t thesis-service:local ../thesis-service
 k3d image import thesis-service:local --cluster $CLUSTER_NAME
 
+# 9. GRI 서비스 빌드
+echo "📦 GRI 서비스 빌드 중..."
+docker build -t gri-service:local ../gri-service
+k3d image import gri-service:local --cluster $CLUSTER_NAME
+
 echo "✅ 모든 이미지 빌드 및 k3d 클러스터 import 완료!"
 echo ""
 echo "📋 빌드된 이미지들:"
@@ -56,3 +61,4 @@ echo "  - issuepool-service:local"
 echo "  - report-service:local"
 echo "  - stock-service:local"
 echo "  - thesis-service:local"
+echo "  - gri-service:local"

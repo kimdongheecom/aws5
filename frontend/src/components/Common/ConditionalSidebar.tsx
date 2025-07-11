@@ -1,23 +1,27 @@
-"use client";
+'use client';
 
+import React, { ReactNode } from 'react';
+import Navigation from '@/components/Navigation';
 import { usePathname } from 'next/navigation';
-import Sidebar from '@/components/Common/Sidebar';
 
-export default function ConditionalSidebar() {
+interface ConditionalSidebarProps {
+  children: ReactNode;
+}
+
+const ConditionalSidebar: React.FC<ConditionalSidebarProps> = ({ children }) => {
   const pathname = usePathname();
-  
-  // 특정 페이지들에서는 Sidebar를 숨깁니다
-  const shouldHideSidebar = pathname === '/' || 
-                           pathname === '/contact' ||
-                           pathname === '/stock-price' ||
-                           pathname === '/watchdog' ||
-                           pathname === '/gri' ||
-                           pathname === '/thesis' ||
-                           pathname === '/profile';
-  
-  if (shouldHideSidebar) {
-    return null;
+  const isHomePage = pathname === '/';
+
+  if (isHomePage) {
+    return <>{children}</>;
   }
-  
-  return <Sidebar />;
-} 
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6">
+      <Navigation />
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+};
+
+export default ConditionalSidebar; 

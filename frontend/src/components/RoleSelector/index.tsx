@@ -2,30 +2,35 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { useRoleStore, Role } from '@/store/roleStore';
+import { useAuthStore } from '@/domain/auth/store/auth.store';
+import { useRoleStore, Role } from '@/domain/auth/store/role.store';
 
 const RoleSelector = () => {
   const router = useRouter();
-  const { data: session, update } = useSession();
+  const { user, setUser } = useAuthStore();
   
   // Zustand store에서 역할 상태와 setter 가져오기
   const { role: currentRole, setRole } = useRoleStore();
   
   useEffect(() => {
-    // 세션에서 역할 가져오기
-    if (session?.user?.role) {
-      // 세션에 역할이 있으면 store 업데이트
-      setRole(session.user.role as Role);
+    // 인증 스토어에서 역할 가져오기
+    if (user?.role) {
+      // 인증 스토어에 역할이 있으면 role store 업데이트
+      setRole(user.role as Role);
     }
-  }, [session, setRole]);
+  }, [user?.role, setRole]);
   
   const handleRoleChange = async (role: Role) => {
     // Zustand store에 역할 저장
     setRole(role);
     
-    // 세션 업데이트
-    await update({ role });
+    // 인증 스토어 업데이트
+    if (user) {
+      setUser({
+        ...user,
+        role
+      });
+    }
     
     // 리디렉션
     const path = window.location.pathname;

@@ -1,4 +1,4 @@
-import pandas as pd
+import pandas as pd  # type: ignore
 import os
 import re
 import json
@@ -7,7 +7,15 @@ from app.foundation.config import BASE_DIR
 
 class KnowledgeTrainer:
     def __init__(self):
-        self.gri_file_path = BASE_DIR / "data" / "knowledge" / "GRI content index_KOMIPO.xlsx"
+        # knowledge 폴더에서 Excel 파일 자동 탐지
+        knowledge_dir = BASE_DIR / "data" / "knowledge"
+        excel_files = list(knowledge_dir.glob("*.xlsx"))
+        
+        if not excel_files:
+            raise FileNotFoundError(f"'{knowledge_dir}' 폴더에서 Excel 파일을 찾을 수 없습니다.")
+            
+        # 첫 번째 Excel 파일 사용
+        self.gri_file_path = excel_files[0]
     
     def new_file(self):
         """기존 코드의 new_file() 메서드를 위한 placeholder"""
@@ -103,8 +111,12 @@ class KnowledgeTrainer:
             
             # 검색어와 일치하는 행 찾기
             for index, row in df.iterrows():
-                gongsi = str(row['공시사항']) if pd.notna(row['공시사항']) else ""
-                yogusahang = str(row['요구사항']) if pd.notna(row['요구사항']) else ""
+                gongsi_raw = row['공시사항']
+                yogusahang_raw = row['요구사항']
+                
+                # pandas 타입 체크 문제 해결을 위한 안전한 변환
+                gongsi = str(gongsi_raw) if not pd.isna(gongsi_raw) else ""  # type: ignore
+                yogusahang = str(yogusahang_raw) if not pd.isna(yogusahang_raw) else ""  # type: ignore
                 
                 # 공시사항에서 숫자 부분 추출
                 gongsi_number = re.search(r'\d+[-\d]*', gongsi)
@@ -128,6 +140,8 @@ class KnowledgeTrainer:
         print("\n=== GRI 요구사항 검색 시스템 ===")
         print("GRI 번호를 입력하세요 (예: 418-1)")
         print("원본 텍스트로 보려면 번호 뒤에 ' raw'를 추가하세요 (예: 201-1 raw)")
+        print("'adapter' 를 입력하면 LoRA 어댑터 정보를 확인할 수 있습니다")
+        print("'ai' 를 입력하면 AI 질답 모드로 전환됩니다 (LoRA 어댑터 적용)")
         print("종료하려면 'quit', 'exit', 또는 'q'를 입력하세요.")
         print()
         
@@ -141,6 +155,15 @@ class KnowledgeTrainer:
                 
                 if not user_input:
                     print("GRI 번호를 입력해주세요.")
+                    continue
+                
+                # 특별 명령어 처리
+                if user_input.lower() == 'adapter':
+                    self.show_adapter_info()
+                    continue
+                
+                if user_input.lower() == 'ai':
+                    self.switch_to_ai_mode()
                     continue
                 
                 # RAW 옵션 확인 (기본은 JSON)
@@ -169,6 +192,92 @@ class KnowledgeTrainer:
             except Exception as e:
                 print(f"오류가 발생했습니다: {e}")
 
+    def show_adapter_info(self):
+        """현재 LoRA 어댑터 정보를 표시합니다."""
+        try:
+            from app.domain.service.model_loader_service import ModelLoaderService
+            
+            # 모델 서비스 인스턴스 가져오기
+            model_service = ModelLoaderService()
+            
+            if not model_service.model:
+                print("⚠️ AI 모델이 로딩되지 않았습니다.")
+                print("💡 'ai' 명령으로 AI 모드에 진입하면 모델이 자동으로 로딩됩니다.")
+                return
+            
+            adapter_info = model_service.get_adapter_info()
+            
+            print("\n🔧 LoRA 어댑터 상태")
+            print("=" * 40)
+            print(f"현재 어댑터: {adapter_info['current_adapter'] or '없음 (베이스 모델)'}")
+            print(f"로딩된 어댑터: {adapter_info['available_adapters'] or '없음'}")
+            
+            if adapter_info['adapter_config']:
+                config = adapter_info['adapter_config']
+                print(f"어댑터 이름: {config['name']}")
+                print(f"설명: {config['description']}")
+                print(f"활성화: {config['enabled']}")
+            
+            print("=" * 40)
+            
+        except Exception as e:
+            print(f"❌ 어댑터 정보 조회 실패: {e}")
+
+    def switch_to_ai_mode(self):
+        """LoRA 어댑터와 함께 AI 질답 모드를 시작합니다."""
+        try:
+            from app.domain.service.model_loader_service import ModelLoaderService
+            
+            model_service = ModelLoaderService()
+            
+            if not model_service.model:
+                print("🤖 AI 모델을 로딩 중...")
+                model_service.load_model()
+            
+            print("\n🤖 AI 질답 모드 (LoRA 어댑터 적용)")
+            print("=" * 50)
+            print("사용법:")
+            print("- 자연어로 질문하세요")
+            print("- 'back' 을 입력하면 검색 모드로 돌아갑니다") 
+            print("- 'quit' 또는 'q'를 입력하면 종료됩니다")
+            print("=" * 50)
+            
+            # 현재 어댑터 상태 표시
+            adapter_info = model_service.get_adapter_info()
+            current_adapter = adapter_info['current_adapter']
+            if current_adapter:
+                print(f"🔧 현재 어댑터: {current_adapter}")
+            else:
+                print("🔧 베이스 모델 사용 중 (어댑터 없음)")
+            print()
+            
+            while True:
+                user_input = input("💬 질문을 입력하세요: ").strip()
+                
+                if user_input.lower() in ['quit', 'q', 'exit']:
+                    print("👋 AI 질답을 종료합니다.")
+                    break
+                
+                if user_input.lower() == 'back':
+                    print("🔍 검색 모드로 돌아갑니다.")
+                    return
+                
+                if not user_input:
+                    continue
+                
+                print(f"\n🤖 AI 답변 생성 중...")
+                try:
+                    response = model_service.generate(user_input, max_new_tokens=300)
+                    print(f"\n🤖 답변:")
+                    print("-" * 30)
+                    print(response)
+                    print("-" * 30)
+                except Exception as e:
+                    print(f"❌ AI 답변 생성 실패: {e}")
+                    
+        except Exception as e:
+            print(f"❌ AI 모드 시작 실패: {e}")
+
 # 사용 예시
 if __name__ == "__main__":
     # 인스턴스 생성
@@ -189,8 +298,11 @@ if __name__ == "__main__":
         print("\n=== JSON 형태로 데이터 출력 ===")
         
         for index, row in df.iterrows():
-            gongsi = row['공시사항'] if pd.notna(row['공시사항']) else ""
-            yogusahang = row['요구사항'] if pd.notna(row['요구사항']) else ""
+            gongsi_raw = row['공시사항'] 
+            yogusahang_raw = row['요구사항']
+            
+            gongsi = str(gongsi_raw) if not pd.isna(gongsi_raw) else ""  # type: ignore
+            yogusahang = str(yogusahang_raw) if not pd.isna(yogusahang_raw) else ""  # type: ignore
             
             # 빈 행은 건너뛰기
             if gongsi.strip() == "" and yogusahang.strip() == "":
@@ -214,9 +326,7 @@ if __name__ == "__main__":
         # 대화형 검색 시작
         trainer.interactive_search()
         
-    except Exception as e:
-        print(f"데이터 로드 중 오류: {e}")
     except FileNotFoundError as e:
-        print(f"오류: {e}")
+        print(f"파일을 찾을 수 없습니다: {e}")
     except Exception as e:
         print(f"데이터 로드 중 오류 발생: {e}")

@@ -1,9 +1,9 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/Common/LoadingSpinner';
+import { useAuthStore } from '@/domain/auth/store/auth.store';
 
 type Role = 'admin' | 'user' | 'subscriber';
 
@@ -18,20 +18,20 @@ const ProtectedRoute = ({
   role, 
   fallback 
 }: ProtectedRouteProps) => {
-  const { data: session, status } = useSession();
+  const { user, isLoading, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (isLoading) return;
 
-    if (status === 'unauthenticated') {
+    if (!isAuthenticated) {
       console.log('ProtectedRoute - 인증되지 않음');
       router.replace('/auth/login');
       return;
     }
 
-    if (status === 'authenticated' && session) {
-      const userRole = session.user?.role || 'user';
+    if (isAuthenticated && user) {
+      const userRole = user.role || 'user';
 
       const requiredRoles = Array.isArray(role) ? role : [role];
       const hasPermission = !role || requiredRoles.includes(userRole as Role);
@@ -41,9 +41,9 @@ const ProtectedRoute = ({
         router.replace('/dashboard');
       }
     }
-  }, [status, session, role, router]);
+  }, [isLoading, isAuthenticated, user, role, router]);
 
-  if (status === 'loading' || (status === 'authenticated' && role && session && !Array.isArray(role) && session.user?.role !== role)) {
+  if (isLoading || (isAuthenticated && role && user && !Array.isArray(role) && user.role !== role)) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">

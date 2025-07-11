@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gri-service
+  labels:
+    app: gri-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gri-service
+  template:
+    metadata:
+      labels:
+        app: gri-service
+    spec:
+      containers:
+      - name: gri-service
+        image: gri-service:local
+        ports:
+        - containerPort: 8010
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres:5432/lifdb"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "gri-service"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gri-service
+  labels:
+    app: gri-service
+spec:
+  selector:
+    app: gri-service
+  ports:
+  - port: 8010
+    targetPort: 8010
+    protocol: TCP
+  type: ClusterIP 

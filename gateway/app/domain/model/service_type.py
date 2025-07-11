@@ -10,6 +10,7 @@ class ServiceType(str, Enum):
     THESIS = "thesis"
     STOCK = "stock"
     GRI = "gri"
+    AUTH = "auth"
 
 # ✅ 환경 변수에서 서비스 URL 가져오기
 NEWS_SERVICE_URL = os.getenv("NEWS_SERVICE_URL")
@@ -19,6 +20,7 @@ REPORT_SERVICE_URL = os.getenv("REPORT_SERVICE_URL")
 THESIS_SERVICE_URL = os.getenv("THESIS_SERVICE_URL")
 STOCK_SERVICE_URL = os.getenv("STOCK_SERVICE_URL")
 GRI_SERVICE_URL = os.getenv("GRI_SERVICE_URL")
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL")
 
 SERVICE_URLS = {
     ServiceType.NEWS: NEWS_SERVICE_URL,
@@ -28,4 +30,5 @@ SERVICE_URLS = {
     ServiceType.THESIS: THESIS_SERVICE_URL,
     ServiceType.STOCK: STOCK_SERVICE_URL,
     ServiceType.GRI: GRI_SERVICE_URL,
+    ServiceType.AUTH: AUTH_SERVICE_URL,
 }

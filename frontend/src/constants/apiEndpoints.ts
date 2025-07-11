@@ -8,6 +8,10 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH_TOKEN: '/auth/refresh-token',
     ME: '/auth/me',
+    GOOGLE: {
+      LOGIN: '/auth/google/login',
+      CALLBACK: '/auth/google/callback'
+    }
   },
   DASHBOARD: {
     COMPANY_DATA: '/dashboard/company',

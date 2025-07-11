@@ -1,9 +1,8 @@
 # =========================================================================
-# Base Image: PyTorch, CUDA, cuDNN이 모두 포함된 공식 이미지를 사용
+# Base Image: [변경] CUDA 12.1.1 공식 이미지를 사용합니다.
+# 'devel' 버전은 bitsandbytes 등 일부 패키지 컴파일에 필요한 도구를 포함합니다.
 # =========================================================================
-# PyTorch 2.3.0, CUDA 11.8, Python 3.11 환경을 제공합니다.
-# GPU를 사용하기 위해 'python:3.12.7-slim' 대신 이 이미지를 반드시 사용해야 합니다.
-FROM pytorch/pytorch:2.3.0-cuda11.8-cudnn8-runtime
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 # =========================================================================
 # Environment Variables: 컨테이너 환경 설정
@@ -14,48 +13,53 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # =========================================================================
-# System Packages: 필요한 시스템 도구 설치
+# System Packages & Python 3.12.7 설치
 # =========================================================================
-# apt-get: 리눅스 패키지 매니저
-# tzdata: 타임존 설정을 위함
-# curl: 상태 체크(health check)나 간단한 API 테스트에 사용
-# git, git-lfs: 코드나 모델을 git으로 관리할 경우를 대비 (추천)
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    # [변경] Python 3.12 설치
+    python3.12 \
+    python3.12-venv \
+    python3.12-dev \
+    python3-pip \
+    # 기존 시스템 패키지
     tzdata \
     curl \
     git \
     git-lfs \
     && rm -rf /var/lib/apt/lists/*
 
+# [변경] python3 -> python3.12, pip -> pip3로 심볼릭 링크 설정
+RUN ln -s /usr/bin/python3.12 /usr/bin/python && \
+    ln -s /usr/bin/python3.12 /usr/bin/python3
+
 # =========================================================================
 # Application Setup
 # =========================================================================
-# 작업 디렉토리 설정
 WORKDIR /app
 
-# Python 의존성 설치 (가장 효율적인 방식)
+# [변경] PyTorch를 먼저 설치하여 Docker 빌드 캐시 효율 극대화
+# 추천해주신 최적 조합(PyTorch Nightly + CUDA 12.1)을 설치합니다.
+RUN pip install --upgrade pip && \
+    pip install torch --pre --index-url https://download.pytorch.org/whl/nightly/cu121
+
+# Python 의존성 설치
 # 1. requirements.txt 파일만 먼저 복사합니다.
 COPY requirements.txt .
-# 2. 의존성을 설치합니다. 이 부분은 requirements.txt가 변경되지 않으면 캐시되어 재사용됩니다.
+# 2. PyTorch를 제외한 나머지 의존성을 설치합니다.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 소스 코드 전체 복사
-# 의존성 설치 후에 코드를 복사해야, 코드만 변경 시 빌드 속도가 빨라집니다.
 COPY . .
 
 # =========================================================================
 # Networking and Execution
 # =========================================================================
-# 컨테이너 외부에서 접속할 포트 노출
 EXPOSE 8010
 
-# 컨테이너의 정상 상태를 확인하는 Health Check (선택사항이지만 강력 추천)
-# 서비스에 '/health' 같은 간단한 응답을 주는 API 엔드포인트가 있다고 가정합니다.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8010/health || exit 1
 
-# 컨테이너 시작 시 실행될 메인 명령어
-# 최종 배포 시에는 --reload 옵션을 제거하는 것이 좋습니다.
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8010"]
-# 만약 main.py가 app 폴더 안에 있다면 아래와 같이 경로를 지정합니다.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010", "--reload"]

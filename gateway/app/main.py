@@ -1,205 +1,101 @@
 import json
-from fastapi import APIRouter, FastAPI, Request, Response, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import os
 import logging
 import sys
-from dotenv import load_dotenv
-from app.domain.model.service_proxy_factory import ServiceProxyFactory
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import APIRouter, FastAPI, Request, HTTPException, Body, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response, RedirectResponse
+from dotenv import load_dotenv
+from httpx import Response as HTTPXResponse
+import httpx
+
+from app.domain.model.service_proxy_factory import ServiceProxyFactory
 from app.domain.model.service_type import ServiceType
-from typing import Optional
+from app.api.auth_router import router as auth_router  # 수정된 import 경로
 
-# 로깅 설정
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# --- 1. 로깅 및 환경설정 ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger("gateway_api")
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path, verbose=True)
 
-# .env 파일 로드
-load_dotenv()
-
-# ✅ 애플리케이션 시작 시 실행
+# --- 2. FastAPI 앱 생명주기 및 설정 ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Gateway API 서비스 시작")
     yield
     logger.info("🛑 Gateway API 서비스 종료")
 
-
-# ✅ FastAPI 앱 생성 
-app = FastAPI(
-    title="Gateway API",
-    description="Gateway API for jinmini.com",
-    version="0.1.0",
-    lifespan=lifespan
-)
+app = FastAPI(title="Gateway API", description="Gateway API for all services", version="0.1.0", lifespan=lifespan)
 
 # ✅ CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],  # 프론트엔드 URL만 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ 메인 라우터 생성
-gateway_router = APIRouter(prefix="/e/v2", tags=["Gateway API"])
+# --- 3. 라우터 분리 ---
+proxy_router = APIRouter(prefix="/e/v2", tags=["Proxy API"])
 
-# ✅ 헬스 체크 엔드포인트 추가
-@gateway_router.get("/health", summary="테스트 엔드포인트")
+# --- 5. 기존 프록시 엔드포인트 ---
+@proxy_router.get("/health", summary="헬스 체크 엔드포인트")
 async def health_check():
     return {"status": "healthy!"}
 
-# ✅ 메인 라우터 실행
-
-# GET
-@gateway_router.get("/{service}/{path:path}", summary="GET 프록시")
-async def proxy_get(
-    service: ServiceType, 
-    path: str, 
-    request: Request
-):
+@proxy_router.get("/{service}/{path:path}", summary="GET 프록시")
+async def proxy_get(service: ServiceType, path: str, request: Request):
     factory = ServiceProxyFactory(service_type=service)
-    logger.info(f"🎃✨🎉🎊 Service URL: {factory.base_url}")
-    response = await factory.request(
-        method="GET",
-        path=path,
-        headers=dict(request.headers)
-    )
-    
-    content_type = response.headers.get('content-type', '')
-    
-    if 'text/html' in content_type:
-        return Response(
-            content=response.content,
-            media_type=content_type,
-            status_code=response.status_code
-        )
-    return JSONResponse(content=response.json(), status_code=response.status_code)
+    response = await factory.request(method="GET", path=path, headers=dict(request.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
-# POST
-@gateway_router.post("/{service}/{path:path}", summary="POST 프록시")
-async def proxy_post(
-    service: ServiceType,
-    path: str,
-    request: Request,
-    file: Optional[UploadFile] = File(None),
-    json_data: Optional[str] = Form(None)
-):
-    logger.info(f"🌈Received request for service: {service}, path: {path}")
+@proxy_router.post("/{service}/{path:path}", summary="POST 프록시")
+async def proxy_post(service: ServiceType, path: str, request: Request):
     factory = ServiceProxyFactory(service_type=service)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+    response = await factory.request(method="POST", path=path, headers=headers, body=body)
+    return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
-    content_type = request.headers.get('content-type', '')
-
-    # ✅ 기본 헤더 설정
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
-
-    if 'application/json' in content_type:
-        body_dict = await request.json()
-        body_bytes = json.dumps(body_dict).encode("utf-8")
-        response = await factory.request(
-            method="POST",
-            path=path,
-            headers=headers,
-            body=body_bytes
-        )
-
-    elif file:
-        return JSONResponse(
-            content={"error": "파일 업로드는 현재 지원되지 않습니다."},
-            status_code=501
-        )
-
-    elif json_data:
-        try:
-            data_dict = json.loads(json_data)
-            body_bytes = json.dumps(data_dict).encode("utf-8")
-        except Exception as e:
-            return JSONResponse(content={"error": f"Invalid JSON string: {str(e)}"}, status_code=400)
-
-        response = await factory.request(
-            method="POST",
-            path=path,
-            headers=headers,
-            body=body_bytes
-        )
-
-    else:
-        return JSONResponse(
-            content={"error": "파일, JSON 데이터 또는 application/json 요청 중 하나가 필요합니다."},
-            status_code=400
-        )
-
-    # 응답 처리
-    if response.status_code == 200:
-        try:
-            return JSONResponse(
-                content=response.json(),
-                status_code=response.status_code
-            )
-        except json.JSONDecodeError:
-            return Response(
-                content=response.content,
-                media_type=response.headers.get('content-type', 'application/octet-stream'),
-                status_code=response.status_code
-            )
-    else:
-        return JSONResponse(
-            content={"detail": f"Service error: {response.text}"},
-            status_code=response.status_code
-        )
-
-
-# PUT
-@gateway_router.put("/{service}/{path:path}", summary="PUT 프록시")
+@proxy_router.put("/{service}/{path:path}", summary="PUT 프록시")
 async def proxy_put(service: ServiceType, path: str, request: Request):
     factory = ServiceProxyFactory(service_type=service)
-    response = await factory.request(
-        method="PUT",
-        path=path,
-        headers=dict(request.headers),
-        body=await request.body()
-    )
-    return JSONResponse(content=response.json(), status_code=response.status_code)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+    response = await factory.request(method="PUT", path=path, headers=headers, body=body)
+    return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
-# DELETE
-@gateway_router.delete("/{service}/{path:path}", summary="DELETE 프록시")
+@proxy_router.delete("/{service}/{path:path}", summary="DELETE 프록시")
 async def proxy_delete(service: ServiceType, path: str, request: Request):
     factory = ServiceProxyFactory(service_type=service)
-    response = await factory.request(
-        method="DELETE",
-        path=path,
-        headers=dict(request.headers),
-        body=await request.body()
-    )
-    return JSONResponse(content=response.json(), status_code=response.status_code)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+    response = await factory.request(method="DELETE", path=path, headers=headers, body=body)
+    return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
-# PATCH
-@gateway_router.patch("/{service}/{path:path}", summary="PATCH 프록시")
+@proxy_router.patch("/{service}/{path:path}", summary="PATCH 프록시")
 async def proxy_patch(service: ServiceType, path: str, request: Request):
     factory = ServiceProxyFactory(service_type=service)
-    response = await factory.request(
-        method="PATCH",
-        path=path,
-        headers=dict(request.headers),
-        body=await request.body()
-    )
-    return JSONResponse(content=response.json(), status_code=response.status_code)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+    response = await factory.request(method="PATCH", path=path, headers=headers, body=body)
+    return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
-# ✅ 라우터 등록
-app.include_router(gateway_router)
+# --- 6. 라우터 등록 ---
+app.include_router(auth_router, prefix="/auth")  # auth 라우터에 /auth 프리픽스 추가
+app.include_router(proxy_router)
 
-# ✅ 서버 실행
+# --- 7. 서버 실행 ---
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True) 
-
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)

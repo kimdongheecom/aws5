@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChevronDown, 
   faChevronRight,
-  faHome,
   faBuilding,
   faBook,
   faChartBar,
@@ -40,14 +39,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 mt-[20vh] ${className}`}>
       <ul className="space-y-2">
-        {/* 홈 */}
-        <li className="rounded-lg hover:bg-blue-50">
-          <Link href="/home" className="flex items-center px-4 py-2 text-gray-700">
-            <FontAwesomeIcon icon={faHome} className="mr-2 text-blue-500" />
-            <span>Home</span>
-          </Link>
-        </li>
-        
         {/* Overview */}
         <li className="rounded-lg">
           <div 

@@ -42,7 +42,8 @@ app.include_router(news_router, prefix="/news",tags=["News 서비스"])
 # 예외 처리 미들웨어 추가
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logger.info(f"📥 요청: {request.method} {request.url.path} (클라이언트: {request.client.host})")
+    client_host = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "unknown")
+    logger.info(f"📥 요청: {request.method} {request.url.path} (클라이언트: {client_host})")
     try:
         response = await call_next(request)
         logger.info(f"📤 응답: {response.status_code}")

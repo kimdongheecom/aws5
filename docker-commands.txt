@@ -68,3 +68,5 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available()); pr
 
 # 모델 명
 Llama3-Ko-8B-Instruct (beomi/llama3-ko-8b-instruct) 
+
+# 환경 버전 정보 명령어

@@ -55,7 +55,7 @@ export default function ESGWatchdogPage() {
                   <input
                     type="text"
                     placeholder="모니터링할 기업명을 입력하세요 (예: 삼성전자, LG화학, SK하이닉스...)"
-                    className="w-full px-6 py-4 text-lg border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition-colors duration-200"
+                    className="w-full px-6 py-4 text-lg border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition-colors duration-200 bg-white text-gray-800 placeholder-gray-500"
                   />
                   <button className="absolute right-2 top-2 bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200 font-semibold">
                     검색
@@ -98,6 +98,7 @@ export default function ESGWatchdogPage() {
               </div>
             </div>
 
+            {/* 지배구조(G) 모니터링 */}
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl shadow-lg mb-8">
               <div className="flex items-center mb-4">
                 <div className="text-3xl mr-3">⚖️</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import ProtectedRoute from "@/components/ProtectedRoute";
-import AdminDashboard from "@/features/admin/components/AdminDashboard";
+import AdminDashboard from "@/domain/admin/components/AdminDashboard";
 
 export default function AdminDashboardPage() {
   return (

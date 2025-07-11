@@ -9,16 +9,16 @@ from app.domain.model.login_model import LoginEntity
 class LoginRepository:
     """Login 데이터 관리를 위한 레포지토리 클래스"""
     
-    def __init__(self, pool: asyncpg.Pool = None):
+    def __init__(self, pool: Optional[asyncpg.Pool] = None):
         """레포지토리 초기화
         
         Args:
             pool: 데이터베이스 연결 풀
         """
-        self.pool = pool
+        self.pool: Optional[asyncpg.Pool] = pool
         self._entities: Dict[str, LoginEntity] = {}  # 메모리 캐시 (개발용)
     
-    async def _get_connection(self):
+    async def _get_connection(self) -> asyncpg.Connection:
         """데이터베이스 연결을 가져옵니다."""
         if not self.pool:
             # 환경 변수에서 DB 연결 정보 가져오기
@@ -36,10 +36,13 @@ class LoginRepository:
                 user=db_user,
                 password=db_pass
             )
-        
+            
+        if not self.pool:
+            raise RuntimeError("데이터베이스 연결 풀을 생성할 수 없습니다.")
+            
         return await self.pool.acquire()
     
-    async def _release_connection(self, conn):
+    async def _release_connection(self, conn: Optional[asyncpg.Connection]) -> None:
         """데이터베이스 연결을 반환합니다."""
         if self.pool and conn:
             await self.pool.release(conn)
