@@ -75,3 +75,4 @@ class AuthController:
         """
         print(f"프로필 조회 요청 - 토큰: {session_token[:20]}...")
         return await self.login_service.get_user_profile(session_token)
+ 

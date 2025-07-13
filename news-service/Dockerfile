@@ -24,8 +24,8 @@ COPY requirements.txt .
 # 2. PyTorch를 제외한 나머지 의존성 설치
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 3. gri-service의 소스 코드 전체를 /app 폴더 안으로 복사
-COPY gri-service/app/ .
+# 3. news-service의 소스 코드 전체를 /app 폴더 안으로 복사
+COPY app/ .
 
 # --- Networking and Execution ---
 EXPOSE 8010
