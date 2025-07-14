@@ -1,10 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 
-module.exports = { 
-    content: [
-        "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    ],
-    darkMode: "class",
+module.exports = {
+  content: [
+    // 아래 3줄로 수정되었습니다.
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  darkMode: "class",
   theme: {
     fontFamily: {
       inter: ["Inter", "sans-serif"],
@@ -139,4 +142,4 @@ module.exports = {
     },
   },
   plugins: [],
-}; 
+};

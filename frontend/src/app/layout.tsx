@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gradient-to-br from-blue-100 via-purple-50 to-indigo-100`}>
+      <body className={`${inter.className} bg-white dark:bg-gray-900`} style={{ backgroundColor: 'white' }}>
         <ClientLayout>
           <AuthInitializer />
           {children}

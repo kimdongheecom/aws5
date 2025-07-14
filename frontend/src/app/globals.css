@@ -4,8 +4,13 @@
 
 /* ------------- Custom Base Layer ------------- */
 @layer base {
+  html {
+    background-color: white !important;
+  }
+  
   body {
     @apply font-inter text-regular text-waterloo dark:text-manatee relative z-1;
+    background-color: white !important;
   }
 }
 

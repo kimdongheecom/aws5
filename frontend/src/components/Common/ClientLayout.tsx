@@ -13,10 +13,10 @@ export default function ClientLayout({
   const { initializeAuth } = useAuthStore();
 
   return (
-    <ThemeProvider attribute="class">
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <ScrollToTop />
       <Navigation />
-      <main className="pt-14">
+      <main className="pt-14 !bg-white dark:!bg-gray-900">
         {children}
       </main>
     </ThemeProvider>
