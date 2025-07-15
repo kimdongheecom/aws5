@@ -48,11 +48,10 @@ import {
   GRI_417_REQUIREMENTS,
   GRI_418_REQUIREMENTS,
 } from '@/domain/gri/model/requirements.model';
+import ChartIcon from '@/domain/gri/components/ChartIcon';
+import AnalyzeGri from '@/domain/gri/components/AnalyzeGri';
 
 export default function GRIPage() {
-  const [griData, setGriData] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [inputText, setInputText] = useState('');
   
   // 데이터베이스 관리 상태
   const [showCategories, setShowCategories] = useState(false);
@@ -188,40 +187,7 @@ export default function GRIPage() {
     }
   };
 
-  // 완성도 계산 함수
-  const calculateCompletionStats = () => {
-    // 총 질문 수 계산 (모든 requirements의 질문 수)
-    const totalQuestions = Object.values(requirements).reduce((total, disclosureRequirements) => {
-      return total + disclosureRequirements.length;
-    }, 0);
 
-    // 답변이 완료된 질문 수 (입력된 답변이 있는 질문)
-    const answeredQuestions = Object.keys(requirementInputs).filter(key => 
-      requirementInputs[key] && requirementInputs[key].trim().length > 0
-    ).length;
-
-    // Suggested Statement가 생성된 disclosure 수
-    const totalDisclosures = Object.keys(requirements).length;
-    const completedStatements = Object.keys(suggestedStatements).length;
-
-    // 최종 승인된 statement 수
-    const finalApprovedCount = Object.values(approvedStatements).filter(item => 
-      item.status === 'final'
-    ).length;
-
-    return {
-      totalQuestions,
-      answeredQuestions,
-      totalDisclosures,
-      completedStatements,
-      finalApprovedCount,
-      answerCompletionRate: totalQuestions > 0 ? (answeredQuestions / totalQuestions * 100) : 0,
-      statementCompletionRate: totalDisclosures > 0 ? (completedStatements / totalDisclosures * 100) : 0,
-      approvalCompletionRate: completedStatements > 0 ? (finalApprovedCount / completedStatements * 100) : 0
-    };
-  };
-
-  const completionStats = calculateCompletionStats();
 
   // 선택된 disclosure의 Suggested Statement 가져오기
   const getSuggestedStatementForDisclosure = (disclosureId) => {
@@ -443,136 +409,18 @@ ${JSON.stringify({
     }
   };
 
-  const handleGenerateGRI = async () => {
-    if (!inputText.trim()) return;
-    
-    setLoading(true);
-    try {
-      const response = await fetch('/api/gri/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          prompt: inputText,
-          model: 'gri-analysis'
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        setGriData(data.generated_text || data.result || 'GRI 분석이 완료되었습니다.');
-      } else {
-        setGriData(data.error || 'GRI 서비스에 연결할 수 없습니다. 서비스가 실행 중인지 확인해주세요.');
-      }
-    } catch (error) {
-      console.error('GRI 생성 오류:', error);
-      setGriData('GRI 생성 중 오류가 발생했습니다. 네트워크 연결을 확인해주세요.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-50 to-indigo-100">
-        {/* 플로팅 완성도 패널 */}
-        <div className="fixed top-1/2 right-4 transform -translate-y-1/2 z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-4 border border-gray-200 w-48">
-            <div className="text-center mb-3">
-              <h4 className="text-sm font-bold text-gray-800">진행 현황</h4>
-            </div>
-            
-            {/* 미니 원형 차트들 */}
-            <div className="space-y-3">
-              {/* 질문 답변 */}
-              <div className="flex items-center">
-                <div className="relative w-8 h-8 mr-3">
-                  <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="12" stroke="#e5e7eb" strokeWidth="4" fill="none" />
-                    <circle 
-                      cx="16" cy="16" r="12" 
-                      stroke="#3b82f6" strokeWidth="4" fill="none"
-                      strokeDasharray={`${completionStats.answerCompletionRate * 0.754} 75.398`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-blue-600">{Math.round(completionStats.answerCompletionRate)}%</span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-700">질문 답변</p>
-                  <p className="text-xs text-gray-500">{completionStats.answeredQuestions}/323</p>
-                </div>
-              </div>
-
-              {/* 문장 생성 */}
-              <div className="flex items-center">
-                <div className="relative w-8 h-8 mr-3">
-                  <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="12" stroke="#e5e7eb" strokeWidth="4" fill="none" />
-                    <circle 
-                      cx="16" cy="16" r="12" 
-                      stroke="#10b981" strokeWidth="4" fill="none"
-                      strokeDasharray={`${completionStats.statementCompletionRate * 0.754} 75.398`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-green-600">{Math.round(completionStats.statementCompletionRate)}%</span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-700">AI 문장</p>
-                  <p className="text-xs text-gray-500">{completionStats.completedStatements}/{completionStats.totalDisclosures}</p>
-                </div>
-              </div>
-
-              {/* 최종 승인 */}
-              <div className="flex items-center">
-                <div className="relative w-8 h-8 mr-3">
-                  <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="12" stroke="#e5e7eb" strokeWidth="4" fill="none" />
-                    <circle 
-                      cx="16" cy="16" r="12" 
-                      stroke="#8b5cf6" strokeWidth="4" fill="none"
-                      strokeDasharray={`${completionStats.approvalCompletionRate * 0.754} 75.398`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-purple-600">{Math.round(completionStats.approvalCompletionRate)}%</span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-700">최종 승인</p>
-                  <p className="text-xs text-gray-500">{completionStats.finalApprovedCount}/{completionStats.completedStatements}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 전체 진행률 */}
-            <div className="mt-4 pt-3 border-t border-gray-200">
-              <div className="text-center mb-2">
-                <span className="text-sm font-bold text-gray-800">
-                  {Math.round((completionStats.answerCompletionRate + completionStats.statementCompletionRate + completionStats.approvalCompletionRate) / 3)}%
-                </span>
-                <p className="text-xs text-gray-500">전체 완성도</p>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 via-green-500 to-purple-500 h-1.5 rounded-full transition-all duration-700"
-                  style={{ 
-                    width: `${(completionStats.answerCompletionRate + completionStats.statementCompletionRate + completionStats.approvalCompletionRate) / 3}%` 
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
+              <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-50 to-indigo-100">
+          <ChartIcon 
+            requirements={requirements}
+            requirementInputs={requirementInputs}
+            suggestedStatements={suggestedStatements}
+            approvedStatements={approvedStatements}
+          />
 
         <div className="container mx-auto px-4 py-8">
           {/* 헤더 */}
@@ -640,7 +488,7 @@ ${JSON.stringify({
                
                
              </div>
-           </div>
+           </div> {/* GRI 설명 */}
 
           {/* GRI 데이터베이스 관리 섹션 */}
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -773,7 +621,9 @@ ${JSON.stringify({
                 </div>
                                   <div className="mb-4 space-y-1 text-sm opacity-75">
                     <p>• 총 323개 세부 질문</p>
-                    <p>• 답변 완료: {completionStats.answeredQuestions}개 ({Math.round(completionStats.answerCompletionRate)}%)</p>
+                    <p>• 답변 완료: {Object.keys(requirementInputs).filter(key => 
+                      requirementInputs[key] && requirementInputs[key].trim().length > 0
+                    ).length}개</p>
                   </div>
                 <button 
                   onClick={() => setShowRequirements(!showRequirements)}
@@ -1131,49 +981,10 @@ ${JSON.stringify({
             </div>
 
 
-          </div>
+          </div> {/* GRI 데이터베이스 관리 섹션 */}
+              
 
-
-
-          {/* GRI 생성기 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">AI 기반 GRI 분석</h2>
-            
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                분석하고 싶은 ESG 주제나 질문을 입력하세요
-              </label>
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="예: 당사의 탄소 배출량 감소 정책에 대한 GRI 표준 분석을 해주세요..."
-                className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                data-testid="gri-input"
-              />
-            </div>
-
-            <button
-              onClick={handleGenerateGRI}
-              disabled={loading || !inputText.trim()}
-              className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                loading || !inputText.trim()
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-              }`}
-              data-testid="generate-gri-button"
-            >
-              {loading ? '분석 중...' : 'GRI 분석 생성'}
-            </button>
-
-            {/* 결과 표시 */}
-            {griData && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg" data-testid="gri-result">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">GRI 분석 결과:</h3>
-                <div className="whitespace-pre-wrap text-gray-700">{griData}</div>
-              </div>
-            )}
-          </div>
-
+          <AnalyzeGri />
           {/* GRI 표준 링크 */}
           <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">참고 자료</h2>
@@ -1194,7 +1005,7 @@ ${JSON.stringify({
             </div>
           </div>
         </div>
-      </div>
+      </div> {/* min-h-screen bg-gradient-to-br from-purple-100 via-blue-50 to-indigo-100 */}
     </>
   );
 } 
