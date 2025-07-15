@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
@@ -42,126 +41,114 @@ export const getUserData = (state: UserStore) => ({
   email: state.email
 });
 
-// 사용자 스토어 생성
+// 사용자 스토어 생성 (localStorage persist 미들웨어 제거)
 export const useUserStore = create<UserStore>()(
   subscribeWithSelector( 
-    persist(
-      immer(
-        devtools(
-          (set, get) => ({
-            // 상태
+    immer(
+      devtools(
+        (set, get) => ({
+          // 상태
+          user_id: '', 
+          name: '',
+          email: '',
+          isLoading: false,
+          error: null,
+          
+          // 메모이제이션된 selector 함수
+          getUserInfo: () => {
+            const { name, email } = get();
+            return { name, email };
+          },
+          
+          // 액션: 상태 업데이트
+          setUserId: (user_id) => set((state) => {
+            state.user_id = user_id;
+          }),
+          
+          setLoading: (isLoading) => set((state) => {
+            state.isLoading = isLoading;
+          }),
+          
+          setError: (error) => set((state) => {
+            state.error = error;
+          }),
+          
+          reset: () => set({ 
             user_id: '', 
-            name: '',
-            email: '',
-            isLoading: false,
-            error: null,
-            
-            // 메모이제이션된 selector 함수
-            getUserInfo: () => {
-              const { name, email } = get();
-              return { name, email };
-            },
-            
-            // 액션: 상태 업데이트
-            setUserId: (user_id) => set((state) => {
-              state.user_id = user_id;
-            }),
-            
-            setLoading: (isLoading) => set((state) => {
-              state.isLoading = isLoading;
-            }),
-            
-            setError: (error) => set((state) => {
-              state.error = error;
-            }),
-            
-            reset: () => set({ 
-              user_id: '', 
-              name: '', 
-              email: '', 
-              isLoading: false, 
-              error: null 
-            }),
-            
-            // 액션: API 호출 및 상태 업데이트
-            updateName: async (name) => {
-              try {
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-                if (get().user_id) {
-                  await api.put(`/users/${get().user_id}`, { name });
-                }
-                
-                set((state) => { 
-                  state.name = name;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '이름 업데이트 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('이름 업데이트 오류:', error);
+            name: '', 
+            email: '', 
+            isLoading: false, 
+            error: null 
+          }),
+          
+          // 액션: API 호출 및 상태 업데이트
+          updateName: async (name) => {
+            try {
+              set((state) => { state.isLoading = true; state.error = null; });
+              
+              if (get().user_id) {
+                await api.put(`/users/${get().user_id}`, { name });
               }
-            },
-            
-            updateEmail: async (email) => {
-              try {
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-                if (get().user_id) {
-                  await api.put(`/users/${get().user_id}`, { email });
-                }
-                
-                set((state) => { 
-                  state.email = email;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '이메일 업데이트 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('이메일 업데이트 오류:', error);
+              
+              set((state) => { 
+                state.name = name;
+                state.isLoading = false;
+              });
+            } catch (error) {
+              set((state) => { 
+                state.error = error instanceof Error ? error.message : '이름 업데이트 중 오류가 발생했습니다';
+                state.isLoading = false;
+              });
+              console.error('이름 업데이트 오류:', error);
+            }
+          },
+          
+          updateEmail: async (email) => {
+            try {
+              set((state) => { state.isLoading = true; state.error = null; });
+              
+              if (get().user_id) {
+                await api.put(`/users/${get().user_id}`, { email });
               }
-            },
-            
-            fetchUserData: async () => {
-              try {
-                const userId = get().user_id;
-                if (!userId) return;
-                
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-                const response = await api.get(`/users/${userId}`);
-                const userData = response.data as { name: string; email: string };
-                
-                set((state) => { 
-                  state.name = userData.name; 
-                  state.email = userData.email;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '사용자 데이터 로드 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('사용자 데이터 로드 오류:', error);
-              }
-            },
-          })
-        )
-      ),
-      {
-        name: 'user-storage', 
-        storage: createJSONStorage(() => localStorage),
-      
-        partialize: (state) => ({
-          user_id: state.user_id,
-          name: state.name,
-          email: state.email,
-        }),
-      }
+              
+              set((state) => { 
+                state.email = email;
+                state.isLoading = false;
+              });
+            } catch (error) {
+              set((state) => { 
+                state.error = error instanceof Error ? error.message : '이메일 업데이트 중 오류가 발생했습니다';
+                state.isLoading = false;
+              });
+              console.error('이메일 업데이트 오류:', error);
+            }
+          },
+          
+          fetchUserData: async () => {
+            try {
+              const userId = get().user_id;
+              if (!userId) return;
+              
+              set((state) => { state.isLoading = true; state.error = null; });
+              
+              const response = await api.get(`/users/${userId}`);
+              const userData = response.data as { name: string; email: string };
+              
+              set((state) => { 
+                state.name = userData.name; 
+                state.email = userData.email;
+                state.isLoading = false;
+              });
+            } catch (error) {
+              set((state) => { 
+                state.error = error instanceof Error ? error.message : '사용자 데이터 로드 중 오류가 발생했습니다';
+                state.isLoading = false;
+              });
+              console.error('사용자 데이터 로드 오류:', error);
+            }
+          },
+        })
+      )
     )
   )
 );

@@ -49,9 +49,11 @@ export default function AuthCallbackPage() {
         console.log('🔍 쿠키 배열:', allCookies);
         
         const sessionTokenCookie = allCookies.find(row => row.startsWith('session_token='));
+        const authTokenCookie = allCookies.find(row => row.startsWith('auth_token='));
         console.log('🎯 세션 토큰 쿠키:', sessionTokenCookie);
+        console.log('🎯 인증 토큰 쿠키:', authTokenCookie);
         
-        const sessionToken = sessionTokenCookie?.split('=')[1];
+        const sessionToken = sessionTokenCookie?.split('=')[1] || authTokenCookie?.split('=')[1];
         console.log('🔑 추출된 세션 토큰:', sessionToken ? '존재함' : '없음');
 
         if (sessionToken) {
@@ -96,29 +98,11 @@ export default function AuthCallbackPage() {
             router.replace('/auth/login?error=profile_fetch_failed');
           }
         } else {
-          console.error('❌ 세션 토큰이 쿠키에 없음');
-          console.log('💡 백엔드 콜백이 제대로 실행되지 않았을 수 있습니다.');
-          
-          // 잠시 기다렸다가 다시 시도 (백엔드 처리 지연 가능성)
-          console.log('⏰ 2초 후 다시 시도...');
-          setTimeout(() => {
-            const retrySessionToken = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('session_token='))
-              ?.split('=')[1];
-            
-            if (retrySessionToken) {
-              console.log('✅ 재시도에서 세션 토큰 발견');
-              window.location.reload();
-            } else {
-              console.error('❌ 재시도에서도 세션 토큰 없음');
-              router.replace('/auth/login?error=no_session');
-            }
-          }, 2000);
+          console.error('❌ 세션 토큰을 찾을 수 없음');
+          router.replace('/auth/login?error=no_session_token');
         }
       } catch (error) {
-        console.error('❌ 콜백 처리 중 오류:', error);
-        console.error('📍 에러 스택:', error instanceof Error ? error.stack : '스택 정보 없음');
+        console.error('❌ OAuth 콜백 처리 중 오류:', error);
         router.replace('/auth/login?error=callback_error');
       } finally {
         setIsLoading(false);
@@ -129,18 +113,10 @@ export default function AuthCallbackPage() {
   }, [searchParams, router, signin, setIsLoading]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <LoadingSpinner size="large" />
-        <h2 className="text-xl font-semibold text-gray-800 mt-4">
-          로그인 처리 중...
-        </h2>
-        <p className="text-gray-600 mt-2">
-          잠시만 기다려주세요. Google 계정으로 로그인을 완료하고 있습니다.
-        </p>
-        <p className="text-sm text-gray-500 mt-4">
-          문제가 지속되면 브라우저 개발자 도구(F12)의 Console 탭을 확인해주세요.
-        </p>
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-600">로그인 처리 중...</p>
       </div>
     </div>
   );

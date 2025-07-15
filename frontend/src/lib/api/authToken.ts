@@ -1,33 +1,31 @@
-const ACCESS_TOKEN_KEY = 'access_token'
-// 리프레시 토큰은 HTTP-Only 쿠키로 관리되므로 클라이언트에서는 직접 접근하지 않음
+// 쿠키 기반 토큰 관리 (localStorage 사용 제거)
 
-export const setAccessToken = (token: string) => {
-  console.log('🆔🆔🆔🆔🆔setAccessToken :', token)
-  localStorage.setItem(ACCESS_TOKEN_KEY, token) // Authorization 헤더에 토큰 저장
+// httponly 쿠키는 JavaScript에서 접근할 수 없으므로 
+// 토큰 존재 여부는 백엔드 API 호출로만 확인
+export const getAccessToken = (): string | null => {
+  // httponly 쿠키는 브라우저가 자동으로 전송하므로
+  // 프론트엔드에서 직접 읽을 필요 없음
+  console.log('🔒 httponly 쿠키 사용 중 - 토큰은 백엔드에서 자동 처리');
+  return null; // 항상 null 반환, 실제 인증은 백엔드에서 쿠키로 처리
 }
 
-export const getAccessToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(ACCESS_TOKEN_KEY)
-  }
-  return null
-}
-
+// 쿠키에서 토큰 제거 (로그아웃 시 사용)
 export const removeAccessToken = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY)
-}
-
-// 토큰 만료 여부 확인 (JWT 디코딩)
-export const isTokenExpired = (token: string | null): boolean => {
-  if (!token) return true;
-  
-  try {
-    // JWT의 페이로드 부분 디코딩
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    // 만료 시간 확인 (exp 값은 초 단위)
-    return payload.exp * 1000 < Date.now();
-  } catch (error) {
-    console.error('토큰 파싱 오류:', error);
-    return true;
+  if (typeof document !== 'undefined') {
+    console.log('🗑️ 쿠키 삭제 시작');
+    // Docker 환경에서는 domain 설정 제거
+    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    console.log('🗑️ 쿠키 삭제 완료');
   }
 }
+
+// httponly 쿠키 환경에서는 토큰 만료 확인을 백엔드에서 처리
+export const isTokenExpired = (token: string | null): boolean => {
+  // httponly 쿠키는 프론트엔드에서 접근 불가하므로
+  // 백엔드 API 호출로 토큰 유효성 확인
+  return false; // 일단 false 반환, 실제 검증은 백엔드에서
+}
+
+// 토큰 설정 함수는 제거 (서버에서 쿠키로 설정하므로 불필요)
+// setAccessToken 함수는 더 이상 사용하지 않음

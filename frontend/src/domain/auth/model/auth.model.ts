@@ -1,52 +1,60 @@
 import axios from 'axios';
-import { setAccessToken, removeAccessToken, isTokenExpired } from '@/lib/api/authToken';
-import { useApi } from '@/lib/api/useApi';
-import { axiosInstance } from '@/lib/api/axios';
+import { getAccessToken, removeAccessToken } from '../../../lib/api/authToken';
 
-// 인증 관련 API 응답 타입 정의
-export interface AuthResponse {
+// 타입 정의
+interface ApiResponseData {
+  data: {
+    token: string;
+    user_id: string;
+    role: string;
+    name: string;
+  };
+}
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface AuthResponse {
   success: boolean;
   message: string;
   token?: string;
-  refresh_token?: string;
   user_id?: string;
   role?: string;
   name?: string;
 }
 
-// 로그인 요청 타입 정의
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-// 회원가입 요청 타입 정의
-export interface SignupRequest {
-  email: string;
-  password: string;
-  name: string;
-}
-
-// API 응답 데이터 타입
-interface ApiResponseData {
-  data: {
-    token?: string;
-    refresh_token?: string;
-    user_id?: string;
-    role?: string;
-    name?: string;
-    message?: string;
-    [key: string]: any;
-  };
-  message?: string;
-}
-
-// 토큰 갱신 응답 타입
 interface RefreshTokenResponse {
   success: boolean;
   token?: string;
   message?: string;
 }
+
+// Axios 인스턴스 생성
+const axiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true // 쿠키를 주고받기 위해 필요
+});
+
+// 요청 인터셉터 설정
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // 쿠키에서 토큰 가져오기 (localStorage 사용 제거)
+    const token = getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // 실제 API 주소 - Gateway 서비스로 연결
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -77,10 +85,7 @@ export const authService = {
       // 응답에서 토큰 정보 추출
       const { token, user_id, role, name } = response.data.data;
       
-      // 토큰 저장
-      if (token) {
-        setAccessToken(token);
-      }
+      // 토큰은 서버에서 쿠키로 설정하므로 클라이언트에서 별도 저장 불필요
       
       return {
         success: true,
@@ -107,15 +112,21 @@ export const authService = {
       };
     }
   },
-  
+
   // 회원가입 API
-  signup: async (data: SignupRequest): Promise<AuthResponse> => {
+  signup: async (userData: { email: string; password: string; name: string }): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post<ApiResponseData>(AUTH_ENDPOINTS.SIGNUP, data);
+      const response = await axiosInstance.post<ApiResponseData>(AUTH_ENDPOINTS.SIGNUP, userData);
+      
+      const { token, user_id, role, name } = response.data.data;
+      
       return {
         success: true,
         message: '회원가입에 성공했습니다.',
-        ...response.data.data
+        token,
+        user_id,
+        role,
+        name
       };
     } catch (error: any) {
       console.error('회원가입 API 오류:', error);
@@ -133,27 +144,29 @@ export const authService = {
       };
     }
   },
-  
+
   // 로그아웃 API
-  logout: async (): Promise<void> => {
+  logout: async (): Promise<AuthResponse> => {
     try {
       await axiosInstance.post(AUTH_ENDPOINTS.LOGOUT);
-    } catch (error) {
-      console.error('로그아웃 API 오류:', error);
-    } finally {
-      // 로컬 스토리지의 토큰 삭제
+      
+      // 쿠키에서 토큰 제거
       removeAccessToken();
-    }
-  },
-  
-  // 토큰 유효성 확인
-  validateToken: async (): Promise<boolean> => {
-    try {
-      await axiosInstance.get('/auth/validate');
-      return true;
-    } catch (error) {
-      console.error('토큰 유효성 검사 오류:', error);
-      return false;
+      
+      return {
+        success: true,
+        message: '로그아웃에 성공했습니다.',
+      };
+    } catch (error: any) {
+      console.error('로그아웃 API 오류:', error);
+      
+      // 로그아웃 실패해도 클라이언트에서 토큰 제거
+      removeAccessToken();
+      
+      return {
+        success: false,
+        message: '로그아웃 중 오류가 발생했습니다.',
+      };
     }
   },
 
@@ -169,8 +182,7 @@ export const authService = {
       const { token } = response.data;
 
       if (token) {
-        // 새 액세스 토큰 저장
-        setAccessToken(token);
+        // 새 토큰은 서버에서 쿠키로 설정하므로 클라이언트에서 별도 저장 불필요
         console.log('액세스 토큰이 갱신되었습니다.');
         return {
           success: true,
@@ -191,14 +203,4 @@ export const authService = {
       };
     }
   }
-};
-
-// 훅 형태로 사용할 수 있는 버전
-export const useAuthService = () => {
-  const api = useApi();
-  
-  return {
-    ...authService,
-    isLoading: api.loading
-  };
 }; 

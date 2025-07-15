@@ -1,28 +1,28 @@
 import { create } from 'zustand';
-import { authService } from '../services/auth.service';
 
+// Types
 interface User {
   id: string;
-  email: string;
   name: string;
-  role: 'user' | 'subscriber' | 'admin';
-  picture?: string;
+  email: string;
+  role: string;
 }
 
 interface AuthState {
+  // State
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   accessToken: string | null;
-  
+
   // Actions
   setUser: (user: User | null) => void;
   setIsAuthenticated: (value: boolean) => void;
   setIsLoading: (value: boolean) => void;
   setAccessToken: (token: string | null) => void;
-  
+
   // Auth Operations
-  signin: (userId: string, userInfo: { name?: string; email?: string; role?: 'user' | 'subscriber' | 'admin' }, token?: string) => Promise<void>;
+  signin: (userId: string, userInfo: Partial<User>, token?: string | null) => Promise<void>;
   signout: () => void;
   handleAuthFailure: () => void;
   initializeAuth: () => Promise<void>;
@@ -40,21 +40,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   setIsAuthenticated: (value) => set({ isAuthenticated: value }),
   setIsLoading: (value) => set({ isLoading: value }),
   setAccessToken: (token) => {
-    if (token) {
-      localStorage.setItem('accessToken', token);
-    } else {
-      localStorage.removeItem('accessToken');
-    }
+    // localStorage 사용 제거 - 쿠키만 사용
     set({ accessToken: token });
   },
 
   // Auth Operations
   signin: async (userId, userInfo, token) => {
     try {
-      if (token) {
-        localStorage.setItem('accessToken', token);
-      }
-
       const user: User = {
         id: userId,
         name: userInfo?.name || '사용자',
@@ -78,24 +70,37 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signout: () => {
-    localStorage.removeItem('accessToken');
+    // localStorage 사용 제거
     set({
       user: null,
       isAuthenticated: false,
       accessToken: null,
       isLoading: false
     });
+    
+    // 쿠키 삭제
+    if (typeof document !== 'undefined') {
+      document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+    
     console.log('Auth 스토어: 로그아웃 완료');
   },
 
   handleAuthFailure: () => {
-    localStorage.removeItem('accessToken');
+    // localStorage 사용 제거
     set({
       user: null,
       isAuthenticated: false,
       accessToken: null,
       isLoading: false
     });
+    
+    // 쿠키 삭제
+    if (typeof document !== 'undefined') {
+      document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
     
     console.log('Auth 스토어: 인증 실패로 로그아웃 처리');
     
@@ -110,12 +115,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isLoading: true });
       console.log('🔄 인증 상태 초기화 시작');
       
-      // localStorage와 쿠키에서 토큰 확인
-      let token = localStorage.getItem('accessToken');
-      console.log('📦 localStorage 토큰:', token ? '존재함' : '없음');
-      
-      // localStorage에 토큰이 없으면 쿠키에서 확인
-      if (!token && typeof document !== 'undefined') {
+      // 쿠키에서만 토큰 확인 (localStorage 사용 제거)
+      let token: string | null = null;
+      if (typeof document !== 'undefined') {
         console.log('🍪 전체 쿠키:', document.cookie);
         
         // session_token 쿠키 확인
@@ -131,16 +133,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         console.log('🔍 session_token 쿠키:', sessionTokenCookie);
         console.log('🔍 auth_token 쿠키:', authTokenCookie);
         
-        const cookieToken = sessionTokenCookie?.split('=')[1] || authTokenCookie?.split('=')[1];
-        token = cookieToken || null;
+        token = sessionTokenCookie?.split('=')[1] || authTokenCookie?.split('=')[1] || null;
         
         console.log('🎯 추출된 토큰:', token ? '존재함' : '없음');
-        
-        // 쿠키에서 토큰을 찾았으면 localStorage에도 저장
-        if (token) {
-          localStorage.setItem('accessToken', token);
-          console.log('💾 localStorage에 토큰 저장 완료');
-        }
       }
       
       if (!token) {
@@ -191,9 +186,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: false,
         accessToken: null
       });
-      localStorage.removeItem('accessToken');
       
-      // 쿠키도 삭제
+      // 쿠키 삭제
       if (typeof document !== 'undefined') {
         document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';

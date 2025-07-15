@@ -31,11 +31,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Gateway API", description="Gateway API for all services", version="0.1.0", lifespan=lifespan)
 
-# ✅ CORS 설정
+# ✅ CORS 설정 - Docker 환경 고려
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 프론트엔드 URL만 허용
-    allow_credentials=True,
+    allow_origins=[
+        "http://localhost:3000",  # 로컬 접근
+        "http://127.0.0.1:3000",  # 로컬 IP 접근
+        "http://frontend:3000",   # Docker 내부 네트워크
+    ],
+    allow_credentials=True,  # 쿠키 전송을 위해 필수
     allow_methods=["*"],
     allow_headers=["*"],
 )
