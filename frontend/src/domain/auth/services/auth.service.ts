@@ -1,5 +1,14 @@
-import apiClient from '../../../lib/api';
+import axios from 'axios';
 import { useAuthStore } from '../store/auth.store';
+
+// axios 인스턴스 생성 (쿠키 자동 포함)
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  withCredentials: true, // httpOnly 쿠키 자동 포함
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export const authService = {
   login: async (email: string, password: string) => {
@@ -23,33 +32,34 @@ export const authService = {
   },
 
   validateToken: async (token: string) => {
-    const response = await apiClient.post('/auth/validate-token', { token });
+    // httpOnly 쿠키 환경에서는 토큰 검증을 직접 하지 않음
+    // 대신 프로필 API 호출로 인증 상태 확인
+    const response = await apiClient.get('/auth/profile');
     return response.data;
-  },
-
-  getGoogleOAuthUrl: async () => {
-    const response = await apiClient.get('/auth/google/login');
-    return response.data.url;
   },
 
   handleAuthCallback: async (code: string) => {
     try {
-      const response = await apiClient.post('/auth/google/callback', { code });
-      const { access_token, user_info } = response.data;
+      // 1. 먼저 authorization code를 백엔드로 전송하여 토큰 교환 및 쿠키 설정
+      await apiClient.post('/auth/google/callback', { code });
       
-      // store에 토큰과 사용자 정보 저장
+      // 2. 쿠키가 설정된 후 프로필 API를 호출하여 사용자 정보 확인
+      const response = await apiClient.get('/auth/profile');
+      const userInfo = response.data;
+      
+      // store에 사용자 정보 저장
       const { signin } = useAuthStore.getState();
       await signin(
-        user_info.id,
+        userInfo.id || userInfo.email,
         {
-          name: user_info.name,
-          email: user_info.email,
-          role: 'user'
+          name: userInfo.name,
+          email: userInfo.email,
+          role: userInfo.role || 'user'
         },
-        access_token
+        'httponly-cookie' // httpOnly 쿠키 사용 표시
       );
 
-      return response.data;
+      return { user_info: userInfo, success: true };
     } catch (error) {
       console.error('Google 로그인 콜백 처리 실패:', error);
       throw error;

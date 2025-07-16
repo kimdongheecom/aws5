@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GRIAnalysis, CurrentAnalysis } from '../model/gri.model';
-import { griService } from '../services/gri.service';
+import { griService, GriService } from '../services/gri.service';
+
 
 interface GRIState {
   // GRI 분석 데이터

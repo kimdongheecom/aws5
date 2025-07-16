@@ -37,12 +37,19 @@ const LoginForm = () => {
   // ... (다른 코드는 그대로)
 
   const handleGoogleSignIn = useCallback(() => {
-    console.log('백엔드 구글 로그인 API 호출...');
+    console.log('🚀 Google 로그인 시작');
     try {
-      // API_ENDPOINTS를 사용하여 전체 URL 구성
-      window.location.href = `http://localhost:8080${API_ENDPOINTS.AUTH.GOOGLE.LOGIN}`;
+      // 콜백 URI 설정
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      
+      // 백엔드 Google OAuth URL로 직접 리다이렉트
+      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const googleOAuthUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      
+      console.log('🌐 Google OAuth URL로 리다이렉트:', googleOAuthUrl);
+      window.location.href = googleOAuthUrl;
     } catch (error) {
-      console.error('Google 로그인 에러:', error);
+      console.error('❌ Google 로그인 에러:', error);
     }
   }, []);
 

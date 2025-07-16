@@ -20,6 +20,14 @@ const Header = () => {
   
   const { user, isAuthenticated, signout } = useAuthStore();
 
+
+
+  // 디버깅용 로그 (임시)
+  console.log('🔍 Header - 인증 상태:', { 
+    isAuthenticated, 
+    user: user ? { email: user.email, name: user.name } : null 
+  });
+
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
       setStickyMenu(true);
@@ -102,9 +110,10 @@ const Header = () => {
 
             {isAuthenticated && user ? (
                 <div className="flex items-center gap-3">
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-regular text-white duration-300 ease-in-out hover:bg-primaryho"
+                  {/* 로그아웃 버튼 */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-regular text-white duration-300 ease-in-out hover:bg-red-700"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -117,11 +126,11 @@ const Header = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                       />
                     </svg>
-                    대시보드
-                  </Link>
+                    로그아웃
+                  </button>
 
               <div className="relative">
                 <button 
@@ -153,6 +162,26 @@ const Header = () => {
                             {user.email}
                           </p>
                         </div>
+                    <Link
+                      href="/dashboard"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-white/70 dark:hover:bg-dark-3"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="mr-2 h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            />
+                          </svg>
+                          대시보드
+                        </Link>
                     <Link
                       href="/profile"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-white/70 dark:hover:bg-dark-3"
@@ -193,27 +222,6 @@ const Header = () => {
                           </svg>
                           알림
                     </Link>
-                        <div className="border-t border-gray-100 dark:border-gray-700"></div>
-                    <button
-                      onClick={handleLogout}
-                          className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-dark-3"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="mr-2 h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                            />
-                          </svg>
-                      로그아웃
-                    </button>
                   </div>
                 )}
                   </div>

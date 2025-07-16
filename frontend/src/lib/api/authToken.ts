@@ -1,31 +1,47 @@
-// 쿠키 기반 토큰 관리 (localStorage 사용 제거)
+// httpOnly 쿠키 기반 토큰 관리
+// httpOnly 쿠키는 보안상 JavaScript에서 접근할 수 없으므로
+// 모든 인증 확인은 백엔드 API 호출로 처리됩니다.
 
-// httponly 쿠키는 JavaScript에서 접근할 수 없으므로 
+import axios from 'axios';
+
+// axios 인스턴스 생성 (쿠키 자동 포함)
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  withCredentials: true, // httpOnly 쿠키 자동 포함
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// httpOnly 쿠키는 JavaScript에서 접근할 수 없으므로 
 // 토큰 존재 여부는 백엔드 API 호출로만 확인
 export const getAccessToken = (): string | null => {
-  // httponly 쿠키는 브라우저가 자동으로 전송하므로
-  // 프론트엔드에서 직접 읽을 필요 없음
-  console.log('🔒 httponly 쿠키 사용 중 - 토큰은 백엔드에서 자동 처리');
+  console.log('🔒 httpOnly 쿠키 사용 중 - 토큰은 백엔드에서 자동 처리');
   return null; // 항상 null 반환, 실제 인증은 백엔드에서 쿠키로 처리
 }
 
-// 쿠키에서 토큰 제거 (로그아웃 시 사용)
-export const removeAccessToken = () => {
-  if (typeof document !== 'undefined') {
-    console.log('🗑️ 쿠키 삭제 시작');
-    // Docker 환경에서는 domain 설정 제거
-    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    console.log('🗑️ 쿠키 삭제 완료');
+// 로그아웃 시 백엔드 API를 호출하여 쿠키 삭제
+export const removeAccessToken = async (): Promise<void> => {
+  try {
+    console.log('🗑️ 로그아웃 처리 시작');
+    
+    // 백엔드 로그아웃 API 호출 (httpOnly 쿠키 삭제)
+    await apiClient.post('/auth/logout');
+    console.log('✅ 백엔드 로그아웃 성공 - httpOnly 쿠키 삭제됨');
+    
+  } catch (error) {
+    console.error('❌ 로그아웃 API 호출 실패:', error);
   }
 }
 
-// httponly 쿠키 환경에서는 토큰 만료 확인을 백엔드에서 처리
+// httpOnly 쿠키 환경에서는 토큰 만료 확인을 백엔드에서 처리
 export const isTokenExpired = (token: string | null): boolean => {
-  // httponly 쿠키는 프론트엔드에서 접근 불가하므로
-  // 백엔드 API 호출로 토큰 유효성 확인
-  return false; // 일단 false 반환, 실제 검증은 백엔드에서
+  console.log('🔍 토큰 만료 확인은 백엔드 API 호출로 처리됩니다');
+  return false; // 항상 false 반환, 실제 검증은 백엔드에서
 }
 
-// 토큰 설정 함수는 제거 (서버에서 쿠키로 설정하므로 불필요)
-// setAccessToken 함수는 더 이상 사용하지 않음
+// httpOnly 쿠키에서는 토큰 설정을 백엔드에서만 처리
+export const setAccessToken = (token: string): void => {
+  console.log('🔒 httpOnly 쿠키 환경에서는 토큰 설정을 백엔드에서만 처리합니다');
+  // 실제로는 아무것도 하지 않음 - 백엔드에서 쿠키 설정
+}

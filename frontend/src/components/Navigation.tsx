@@ -78,12 +78,24 @@ const Navigation = () => {
 
           {/* Right - Login/Profile Button */}
           {isAuthenticated ? (
-            <Link 
-              href="/dashboard"
-              className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
-            >
-              대시보드
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link 
+                href="/dashboard"
+                className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
+              >
+                대시보드
+              </Link>
+              <button 
+                onClick={() => {
+                  const { signout } = useAuthStore.getState();
+                  signout();
+                  router.push('/auth/login');
+                }}
+                className="bg-red-600 text-white px-4 py-1.5 rounded text-sm hover:bg-red-700 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
           ) : (
             <button 
               onClick={handleLogin}

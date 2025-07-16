@@ -37,11 +37,11 @@ class AuthController:
             session_token = result['access_token']
             print(f"4. 쿠키에 설정할 세션 토큰: {session_token[:20]}...")
             
-            # 보안을 위해 httponly=True로 복원
+            # httpOnly=True로 설정하여 보안 강화 (JavaScript에서 접근 불가)
             response.set_cookie(
                 key="session_token",
                 value=session_token,
-                httponly=True,  # 보안을 위해 True로 복원
+                httponly=True,  # 보안을 위해 True로 설정 - JavaScript 접근 차단
                 samesite="lax",
                 max_age=3600,  # 1시간
                 path="/",
@@ -49,21 +49,10 @@ class AuthController:
                 # Docker 환경에서는 domain 설정 제거
             )
             
-            # 추가로 브라우저에서 읽을 수 있는 쿠키도 설정
-            response.set_cookie(
-                key="auth_token",
-                value=session_token,
-                httponly=True,  # 보안을 위해 True로 복원
-                samesite="lax",
-                max_age=3600,
-                path="/",
-                secure=False,  # HTTPS가 아니므로 False
-                # Docker 환경에서는 domain 설정 제거
-            )
-            
             print(f"5. 쿠키 설정 완료, 리다이렉트: {redirect_url}")
-            print(f"6. 설정된 쿠키 - session_token: {session_token[:10]}..., auth_token: {session_token[:10]}...")
-            print(f"7. 쿠키 설정: httponly=True(보안), samesite=lax, secure=False, path=/")
+            print(f"6. 설정된 쿠키 - session_token: {session_token[:10]}...")
+            print(f"7. 쿠키 설정: httpOnly=True(보안), samesite=lax, secure=False, path=/")
+            print("8. 🔒 JavaScript에서 쿠키 접근 불가 - 오직 서버에서만 접근 가능")
             return response
             
         except Exception as e:

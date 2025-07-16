@@ -1,122 +1,73 @@
-"use client";
+'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/domain/auth/store/auth.store';
+import { authService } from '@/domain/auth/services/auth.service';
 import LoadingSpinner from '@/components/Common/LoadingSpinner';
 
-export default function AuthCallbackPage() {
+export default function AuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signin, setIsLoading } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // 콜백 페이지가 아닌 경우 처리하지 않음
+    if (typeof window === 'undefined') return;
+    if (!window.location.pathname.includes('/auth/callback')) return;
+
     const handleCallback = async () => {
       try {
-        setIsLoading(true);
-        
-        // URL에서 코드와 상태 파라미터 추출
+        // URL에서 authorization code 추출
         const code = searchParams.get('code');
-        const state = searchParams.get('state');
         const error = searchParams.get('error');
 
-        console.log('====================================');
-        console.log('🔄 OAuth 콜백 처리 시작');
-        console.log('📄 URL 파라미터:', { 
-          code: code ? '존재함' : '없음', 
-          state, 
-          error,
-          fullUrl: window.location.href
-        });
-
         if (error) {
-          console.error('❌ OAuth 에러:', error);
-          router.replace('/auth/login?error=oauth_error');
-          return;
+          throw new Error(`Google OAuth 오류: ${error}`);
         }
 
         if (!code) {
-          console.error('❌ OAuth 코드가 없음');
-          router.replace('/auth/login?error=no_code');
+          console.log('인증 코드가 없음 - 로그인 페이지로 리다이렉트');
+          router.push('/auth/login');
           return;
         }
 
-        // 모든 쿠키 확인
-        console.log('🍪 모든 쿠키:', document.cookie);
+        // 백엔드로 code 전송 (axios는 withCredentials: true로 자동 쿠키 전송)
+        // 백엔드에서 토큰 교환 후 httpOnly 쿠키 설정
+        await authService.handleAuthCallback(code);
+
+        // 성공 시 대시보드로 리다이렉트
+        router.push('/dashboard');
+      } catch (err) {
+        console.error('콜백 처리 중 오류:', err);
+        setError(err instanceof Error ? err.message : '인증 처리 중 오류가 발생했습니다.');
         
-        // 쿠키에서 세션 토큰 확인 (백엔드에서 설정한 쿠키)
-        const allCookies = document.cookie.split('; ');
-        console.log('🔍 쿠키 배열:', allCookies);
-        
-        const sessionTokenCookie = allCookies.find(row => row.startsWith('session_token='));
-        const authTokenCookie = allCookies.find(row => row.startsWith('auth_token='));
-        console.log('🎯 세션 토큰 쿠키:', sessionTokenCookie);
-        console.log('🎯 인증 토큰 쿠키:', authTokenCookie);
-        
-        const sessionToken = sessionTokenCookie?.split('=')[1] || authTokenCookie?.split('=')[1];
-        console.log('🔑 추출된 세션 토큰:', sessionToken ? '존재함' : '없음');
-
-        if (sessionToken) {
-          console.log('✅ 세션 토큰 발견, 사용자 프로필 요청 시작');
-          
-          // 백엔드에서 사용자 프로필 가져오기
-          const profileUrl = `${process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080'}/auth/profile`;
-          console.log('📡 프로필 요청 URL:', profileUrl);
-          
-          const response = await fetch(profileUrl, {
-            credentials: 'include', // 쿠키 포함
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          console.log('📊 프로필 응답 상태:', response.status);
-          console.log('📋 프로필 응답 헤더:', Object.fromEntries(response.headers.entries()));
-
-          if (response.ok) {
-            const userProfile = await response.json();
-            console.log('👤 사용자 프로필 수신:', userProfile);
-
-            // 인증 상태 업데이트
-            await signin(
-              userProfile.id || userProfile.email,
-              {
-                name: userProfile.name,
-                email: userProfile.email,
-                role: 'user'
-              },
-              sessionToken
-            );
-
-            // 원래 페이지 또는 대시보드로 리다이렉트
-            const redirectUrl = state || '/dashboard';
-            console.log('🚀 리다이렉트 URL:', redirectUrl);
-            router.replace(redirectUrl);
-          } else {
-            const errorText = await response.text();
-            console.error('❌ 사용자 프로필 가져오기 실패:', response.status, errorText);
-            router.replace('/auth/login?error=profile_fetch_failed');
-          }
-        } else {
-          console.error('❌ 세션 토큰을 찾을 수 없음');
-          router.replace('/auth/login?error=no_session_token');
-        }
-      } catch (error) {
-        console.error('❌ OAuth 콜백 처리 중 오류:', error);
-        router.replace('/auth/login?error=callback_error');
-      } finally {
-        setIsLoading(false);
+        // 오류 발생 시 로그인 페이지로 리다이렉트
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 3000);
       }
     };
 
     handleCallback();
-  }, [searchParams, router, signin, setIsLoading]);
+  }, [searchParams, router]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">인증 오류</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500">3초 후 로그인 페이지로 이동합니다...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <LoadingSpinner />
-        <p className="mt-4 text-gray-600">로그인 처리 중...</p>
+        <p className="mt-4 text-gray-600">Google 인증을 처리하고 있습니다...</p>
       </div>
     </div>
   );

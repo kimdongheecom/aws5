@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import axios from 'axios';
 
 // Types
 interface User {
@@ -13,7 +14,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  accessToken: string | null;
+  accessToken: string | null; // httpOnly 쿠키 사용 시에는 실제 토큰 값이 아닌 상태 표시용
 
   // Actions
   setUser: (user: User | null) => void;
@@ -23,10 +24,20 @@ interface AuthState {
 
   // Auth Operations
   signin: (userId: string, userInfo: Partial<User>, token?: string | null) => Promise<void>;
-  signout: () => void;
+  signout: () => Promise<void>;
   handleAuthFailure: () => void;
   initializeAuth: () => Promise<void>;
+  forceSignout: () => void; // 강제 로그아웃 함수 추가
 }
+
+// axios 인스턴스 생성 (쿠키 자동 포함)
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  withCredentials: true, // httpOnly 쿠키 자동 포함
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export const useAuthStore = create<AuthState>((set) => ({
   // State
@@ -39,10 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
   setIsAuthenticated: (value) => set({ isAuthenticated: value }),
   setIsLoading: (value) => set({ isLoading: value }),
-  setAccessToken: (token) => {
-    // localStorage 사용 제거 - 쿠키만 사용
-    set({ accessToken: token });
-  },
+  setAccessToken: (token) => set({ accessToken: token }),
 
   // Auth Operations
   signin: async (userId, userInfo, token) => {
@@ -57,7 +65,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         user,
         isAuthenticated: true,
-        accessToken: token || null,
+        accessToken: 'httponly-cookie', // httpOnly 쿠키 사용 표시
         isLoading: false
       });
 
@@ -69,8 +77,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signout: () => {
-    // localStorage 사용 제거
+  // 강제 로그아웃 함수 추가
+  forceSignout: () => {
     set({
       user: null,
       isAuthenticated: false,
@@ -78,29 +86,49 @@ export const useAuthStore = create<AuthState>((set) => ({
       isLoading: false
     });
     
-    // 쿠키 삭제
-    if (typeof document !== 'undefined') {
-      document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // 백엔드 쿠키 삭제
+    apiClient.post('/auth/logout').catch(error => {
+      console.error('강제 로그아웃 중 에러:', error);
+    });
+    
+    console.log('Auth 스토어: 강제 로그아웃 완료');
+    
+    // 로그인 페이지로 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login';
     }
+  },
+
+  signout: async () => {
+    try {
+      console.log('🚪 로그아웃 프로세스 시작');
+      
+      // 백엔드 로그아웃 API 호출 (httpOnly 쿠키 삭제)
+      await apiClient.post('/auth/logout');
+      console.log('✅ 백엔드 로그아웃 성공 - httpOnly 쿠키 삭제됨');
+      
+    } catch (error) {
+      console.error('❌ 로그아웃 API 호출 실패:', error);
+    }
+    
+    // 클라이언트 상태 정리
+    set({
+      user: null,
+      isAuthenticated: false,
+      accessToken: null,
+      isLoading: false
+    });
     
     console.log('Auth 스토어: 로그아웃 완료');
   },
 
   handleAuthFailure: () => {
-    // localStorage 사용 제거
     set({
       user: null,
       isAuthenticated: false,
       accessToken: null,
       isLoading: false
     });
-    
-    // 쿠키 삭제
-    if (typeof document !== 'undefined') {
-      document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    }
     
     console.log('Auth 스토어: 인증 실패로 로그아웃 처리');
     
@@ -114,84 +142,47 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ isLoading: true });
       console.log('🔄 인증 상태 초기화 시작');
+      console.log('📡 백엔드 프로필 API 호출 (httpOnly 쿠키 자동 포함)');
       
-      // 쿠키에서만 토큰 확인 (localStorage 사용 제거)
-      let token: string | null = null;
-      if (typeof document !== 'undefined') {
-        console.log('🍪 전체 쿠키:', document.cookie);
-        
-        // session_token 쿠키 확인
-        const sessionTokenCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('session_token='));
-        
-        // auth_token 쿠키도 확인 (백업용)
-        const authTokenCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('auth_token='));
-        
-        console.log('🔍 session_token 쿠키:', sessionTokenCookie);
-        console.log('🔍 auth_token 쿠키:', authTokenCookie);
-        
-        token = sessionTokenCookie?.split('=')[1] || authTokenCookie?.split('=')[1] || null;
-        
-        console.log('🎯 추출된 토큰:', token ? '존재함' : '없음');
-      }
+      // 백엔드에서 사용자 프로필 가져오기 (httpOnly 쿠키 자동 포함)
+      const response = await apiClient.get('/auth/profile');
       
-      if (!token) {
-        console.log('❌ 토큰이 없어서 인증 초기화 종료');
-        set({ isLoading: false });
-        return;
-      }
-
-      console.log('📡 백엔드로 프로필 요청 시작');
-      
-      // 백엔드에서 사용자 프로필 가져오기 (쿠키 기반)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080'}/auth/profile`, {
-        credentials: 'include', // 쿠키 포함
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      console.log('📊 프로필 응답 상태:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ 프로필 요청 실패:', response.status, errorText);
-        throw new Error('프로필 가져오기 실패');
-      }
-      
-      const userData = await response.json();
-      console.log('👤 사용자 데이터 수신:', userData);
+      console.log('✅ 사용자 프로필 수신:', response.data);
       
       set({
         isLoading: false,
         user: {
-          id: userData.id || userData.email,
-          name: userData.name || '사용자',
-          email: userData.email || '',
-          role: userData.role || 'user'
+          id: response.data.id || response.data.email,
+          name: response.data.name || '사용자',
+          email: response.data.email || '',
+          role: response.data.role || 'user'
         },
         isAuthenticated: true,
-        accessToken: token
+        accessToken: 'httponly-cookie' // httpOnly 쿠키 사용 표시
       });
 
       console.log('✅ Auth 스토어: 인증 상태 초기화 완료');
+      
     } catch (error) {
-      console.error('❌ Auth initialization failed:', error);
+      console.log('❌ 인증되지 않음 또는 API 호출 실패');
+      
+      // axios 에러 처리
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          console.log('📝 401 응답: 정상적인 로그아웃 상태');
+        } else {
+          console.error('❌ API 호출 실패:', error.response?.status, error.response?.data);
+        }
+      } else {
+        console.error('❌ 예상치 못한 오류:', error);
+      }
+      
       set({
         isLoading: false,
         user: null,
         isAuthenticated: false,
         accessToken: null
       });
-      
-      // 쿠키 삭제
-      if (typeof document !== 'undefined') {
-        document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      }
     }
   }
 }));

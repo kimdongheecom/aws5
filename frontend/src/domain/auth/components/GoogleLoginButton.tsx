@@ -1,6 +1,15 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import apiClient from '../../../lib/api';
+import axios from 'axios';
+
+// axios 인스턴스 생성 (쿠키 자동 포함)
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  withCredentials: true, // httpOnly 쿠키 자동 포함
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export const GoogleLoginButton = () => {
   const { setIsLoading } = useAuthStore();
@@ -10,35 +19,20 @@ export const GoogleLoginButton = () => {
       setIsLoading(true);
       
       // 리다이렉트 URI 설정
-      const redirectUri = `${window.location.origin}/dashboard`;
+      const redirectUri = `${window.location.origin}/auth/callback`;
       
       console.log('🚀 Google 로그인 요청 시작');
       console.log('📍 리다이렉트 URI:', redirectUri);
       
-      // 백엔드에서 Google OAuth URL 가져오기
-      const response = await apiClient.get(`/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`);
-      
-      console.log('✅ 백엔드 응답 받음:');
-      console.log('📦 전체 응답 객체:', response);
-      console.log('📄 응답 데이터:', response.data);
-      console.log('📊 응답 상태:', response.status);
-      console.log('📋 응답 헤더:', response.headers);
-      
-      // Google OAuth 페이지로 리다이렉트
-      // 참고: 백엔드가 RedirectResponse를 반환하므로 response.data에는 실제 URL이 없을 수 있음
+      // 백엔드 Google OAuth URL로 직접 리다이렉트
       const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
       const finalUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
       
-      console.log('🌐 최종 리다이렉트 URL:', finalUrl);
+      console.log('🌐 Google OAuth URL로 리다이렉트:', finalUrl);
       window.location.href = finalUrl;
       
     } catch (error) {
       console.error('❌ Google 로그인 중 오류 발생:', error);
-      console.error('🔍 에러 상세:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       setIsLoading(false);
     }
   }, [setIsLoading]);
