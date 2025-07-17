@@ -20,6 +20,27 @@ class LoginService:
         """서비스 초기화 작업"""
         # 테이블 초기화
         await self.repository.init_table()
+
+    async def google_user_profile(self, user_info: Optional[dict]) -> Optional[dict]:
+        # 1. 함수 시작 부분에서 user_info가 None인지 확인 (가드 클로즈 패턴)
+        if user_info is None:
+            # user_info가 없으면 아무 작업도 하지 않고 None(또는 빈 dict)을 반환
+            # 로직에 따라 결정하면 됩니다. 여기서는 None을 반환하는 것이 더 명확합니다.
+            return None
+
+        # 2. 이 지점부터는 user_info가 None이 아니라고 확신할 수 있습니다.
+        #    따라서 user_info를 안전하게 딕셔너리로 다룰 수 있습니다.
+        #    (실제로는 여기에 DB에 저장하거나 업데이트하는 로직이 들어가겠죠)
+    
+        # 예시: user_info에서 값을 추출하는 로직
+        user_name = user_info.get("name")
+        user_email = user_info.get("email")
+        print(f"서비스에 넘어온 정보보: {user_name} ({user_email})")
+
+        # 임시로 빈 딕셔셔리를 반환하는 기존 코드는 그대로 둡니다.
+        # 실제로는 upsert된 프로필 객체를 반환해야 합니다.
+        return {}  
+  
     
     async def get_google_auth_url(self, redirect_uri: str) -> str:
         """Google OAuth 인증 URL을 생성합니다"""
@@ -104,6 +125,8 @@ class LoginService:
                     return {}
                 
                 return response.json()
+
+
                 
         except Exception as e:
             print(f"Error getting user info: {e}")

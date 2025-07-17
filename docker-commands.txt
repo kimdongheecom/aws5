@@ -69,4 +69,9 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available()); pr
 # 게이트웨이 실행 명령어
 uvicorn app.main:app --port 8080 --reload
 
-#
+#포트 3000 실행중인 확인 명령어
+netstat -ano | findstr :3000
+
+# 포트 실행중인 명령어 죽이는 명령어
+taskkill /F /PID 40104
+taskkill /F /PID 37784

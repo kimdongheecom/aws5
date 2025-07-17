@@ -1,19 +1,4 @@
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    env_file:
-      - ./frontend/.env
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-    restart: always
-    networks:
-      - lif-network
 
   news-service:
     build: ./news-service
@@ -134,9 +119,6 @@ services:
               capabilities: [gpu]
     networks:
       - lif-network
-
-
-
   
   postgres:
     image: postgres:15
