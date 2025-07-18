@@ -12,9 +12,11 @@ from dotenv import load_dotenv
 from httpx import Response as HTTPXResponse
 import httpx
 
+# ✅ [추가] database.py에서 create_tables 함수를 import 합니다.
+from app.common.database.model.database import create_tables
 from app.domain.model.service_proxy_factory import ServiceProxyFactory
 from app.domain.model.service_type import ServiceType
-from app.api.auth_router import router as auth_router  # 수정된 import 경로
+from app.api.auth_router import router as auth_router
 
 # --- 1. 로깅 및 환경설정 ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
@@ -26,7 +28,13 @@ load_dotenv(dotenv_path=env_path, verbose=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Gateway API 서비스 시작")
+    
+    # ✅ [추가] 애플리케이션 시작 시 테이블 생성 함수를 호출합니다.
+    logger.info("🔍 데이터베이스 테이블 생성을 시도합니다...")
+    await create_tables()
+    
     yield
+    
     logger.info("🛑 Gateway API 서비스 종료")
 
 app = FastAPI(title="Gateway API", description="Gateway API for all services", version="0.1.0", lifespan=lifespan)
@@ -95,7 +103,7 @@ async def proxy_patch(service: ServiceType, path: str, request: Request):
     return Response(content=response.content, status_code=response.status_code, headers=response.headers)
 
 # --- 6. 라우터 등록 ---
-app.include_router(auth_router, prefix="/auth")  # auth 라우터에 /auth 프리픽스 추가
+app.include_router(auth_router, prefix="/auth")
 app.include_router(proxy_router)
 
 # --- 7. 서버 실행 ---

@@ -20,4 +20,10 @@ k8s/*-secret.yaml
 k8s/secrets/
 *.secret.yaml
 
+# 각 서비스의 .env 파일
+*/.env 
+
+# 루트 폴더에 있을 수 있는 .env 파일
+.env 
+
 

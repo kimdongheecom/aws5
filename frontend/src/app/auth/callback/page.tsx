@@ -40,7 +40,7 @@ export default function AuthCallback() {
       } catch (err) {
         console.error('콜백 처리 중 오류:', err);
         setError(err instanceof Error ? err.message : '인증 처리 중 오류가 발생했습니다.');
-        
+
         // 오류 발생 시 로그인 페이지로 리다이렉트
         setTimeout(() => {
           router.push('/auth/login');

@@ -1,4 +1,3 @@
-# Dockerfile
 # Base Image: Python 3.12.7 공식 이미지를 사용합니다.
 FROM python:3.12.7-slim
 
@@ -21,11 +20,12 @@ WORKDIR /app
 
 # 1. 의존성 파일만 먼저 복사하여 Docker 빌드 캐시를 활용
 COPY requirements.txt .
+
 # 2. PyTorch를 제외한 나머지 의존성 설치
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 3. news-service의 소스 코드 전체를 /app 폴더 안으로 복사
-COPY app/ .
+# 3. [핵심 수정] 로컬 프로젝트 폴더 전체를 복사하여 파일 구조를 그대로 유지
+COPY . .
 
 # --- Networking and Execution ---
 EXPOSE 8010
@@ -33,5 +33,5 @@ EXPOSE 8010
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8010/health || exit 1
 
-# 컨테이너 시작 시 실행될 메인 명령어
+# [핵심 수정] 컨테이너 시작 시 실행될 메인 명령어 (원래의 올바른 형태)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010"]

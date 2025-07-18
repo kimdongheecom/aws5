@@ -51,6 +51,8 @@ RUN python3.12 -m pip install torch torchvision torchaudio --index-url https://d
 
 # 4. 사용자님의 requirements.txt를 사용하여 나머지 Python 의존성 설치
 # requirements.txt를 설치하면, 이미 설치된 torch는 건너뛰고 나머지만 설치합니다.
+COPY requirements.txt .
+
 RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
 
 # 5. 애플리케이션 소스 코드 전체 복사
