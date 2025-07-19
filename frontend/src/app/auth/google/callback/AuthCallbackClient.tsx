@@ -1,4 +1,4 @@
-// frontend/src/app/auth/callback/AuthCallbackClient.tsx
+// frontend/src/app/auth/google/callback/AuthCallbackClient.tsx
 
 'use client';
 

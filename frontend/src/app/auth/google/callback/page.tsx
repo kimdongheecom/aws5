@@ -1,4 +1,4 @@
-// frontend/src/app/auth/callback/page.tsx
+// frontend/src/app/auth/google/callback/page.tsx
 
 import { Suspense } from 'react';
 

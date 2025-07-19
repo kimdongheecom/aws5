@@ -19,7 +19,7 @@ export const GoogleLoginButton = () => {
       setIsLoading(true);
       
       // 리다이렉트 URI 설정
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
       
       console.log('🚀 Google 로그인 요청 시작');
       console.log('📍 리다이렉트 URI:', redirectUri);

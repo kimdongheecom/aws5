@@ -40,7 +40,7 @@ const LoginForm = () => {
     console.log('🚀 Google 로그인 시작');
     try {
       // 콜백 URI 설정
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      const redirectUri = `${window.location.origin}/auth/google/callback`;
       
       // 백엔드 Google OAuth URL로 직접 리다이렉트
       const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
