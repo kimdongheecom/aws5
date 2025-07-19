@@ -98,22 +98,15 @@ services:
     build: ./gateway
     ports:
       - "8080:8080"
-    # env_file을 추가하여 ./gateway/.env 파일의 변수들을 로드합니다.
     env_file:
       - ./gateway/.env
-    # environment 섹션에서는 .env 파일에 없는 변수나, 
-    # .env 파일의 값을 참조하는 변수만 남깁니다.
-    # 하드코딩된 민감 정보들은 모두 제거했습니다.
+    # ✅ [핵심 수정] 볼륨 마운트 설정 추가
+    # 로컬의 ./gateway 폴더를 컨테이너의 /app 폴더와 동기화(연결)합니다.
+    # 이제 로컬에서 코드를 수정하면 컨테이너에 즉시 반영됩니다.
+    volumes:
+      - ./gateway:/app
     environment:
       - PYTHONUNBUFFERED=1
-      # 아래 변수들은 .env 파일에서 자동으로 로드됩니다.
-      # - NEWS_SERVICE_URL=${NEWS_SERVICE_URL}
-      # - SASB_SERVICE_URL=${SASB_SERVICE_URL}
-      # ... (나머지 서비스 URL)
-      # - DB_HOST=${DB_HOST}
-      # ... (나머지 DB 정보)
-      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -130,7 +123,7 @@ services:
       - lif-network
   # =========================================================
   #                        수정 끝
-  # =================================_========================
+  # =========================================================
 
 networks:
   lif-network:

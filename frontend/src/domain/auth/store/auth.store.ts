@@ -120,6 +120,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     
     console.log('Auth 스토어: 로그아웃 완료');
+    
+    // 로그아웃 후 로그인 페이지로 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login';
+    }
   },
 
   handleAuthFailure: () => {
@@ -164,12 +169,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.log('✅ Auth 스토어: 인증 상태 초기화 완료');
       
     } catch (error) {
-      console.log('❌ 인증되지 않음 또는 API 호출 실패');
-      
       // axios 에러 처리
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          console.log('📝 401 응답: 정상적인 로그아웃 상태');
+          console.log('📝 401 응답: 인증되지 않은 상태 (정상)');
         } else {
           console.error('❌ API 호출 실패:', error.response?.status, error.response?.data);
         }

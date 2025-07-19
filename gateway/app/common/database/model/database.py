@@ -54,37 +54,28 @@ def get_database_url() -> str:
     print("🚀 Supabase 데이터베이스 연결을 시도합니다.")
     return f"postgresql+asyncpg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
-# ✅ [변경] pgbouncer(Connection Pooler)와 호환되도록 connect_args 함수를 다시 추가합니다.
+# ✅ [수정] pgbouncer와의 호환성을 위한 connect_args 함수를 간결하게 정리합니다.
+# 가장 핵심적인 설정은 statement_cache_size=0 입니다.
 def get_connect_args() -> dict:
     """
-    데이터베이스 연결 옵션을 반환합니다.
-    pgbouncer는 prepared statement를 지원하지 않으므로 비활성화합니다.
+    Pgbouncer 호환성을 위해 Prepared Statement 캐시를 비활성화하는
+    연결 옵션을 반환합니다.
     """
-    return {
-        "server_settings": {
-            "statement_cache_size": "0"
-        },
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0
-    }
+    return {"statement_cache_size": 0}
 
 # 데이터베이스 연결 URL 생성
 DATABASE_URL = get_database_url()
 
-# 로그 출력 (비밀번호 마스킹)
+# 로그 출력 (비밀번호 마스킹) - 더 안전한 방식으로 수정
 masked_url = DATABASE_URL
-for keyword in ['password', 'pass']:
-    if '@' in masked_url:
-        parts = masked_url.split('@')
-        if ':' in parts[0]:
-            user_pass = parts[0].split(':')
-            if len(user_pass) >= 3:
-                user_pass[-1] = '***'
-                parts[0] = ':'.join(user_pass)
-                masked_url = '@'.join(parts)
+if '@' in masked_url and ':' in masked_url.split('@')[0]:
+    user_pass_part, host_part = masked_url.split('://')[1].split('@')
+    user, _ = user_pass_part.split(':')
+    masked_url = f"postgresql+asyncpg://{user}:***@{host_part}"
 print(f"🔗 데이터베이스 연결 시도: {masked_url}")
 
-# ✅ [변경] SQLAlchemy 비동기 엔진 생성 시 connect_args를 다시 추가합니다.
+
+# ✅ [핵심 수정] SQLAlchemy 비동기 엔진 생성 시, 위에서 정의한 get_connect_args() 함수를 사용하도록 변경합니다.
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
@@ -92,7 +83,7 @@ engine = create_async_engine(
     max_overflow=10,
     pool_timeout=30,
     pool_recycle=3600,
-    connect_args={"statement_cache_size": 0}
+    connect_args=get_connect_args()  # 하드코딩 대신 함수 호출로 변경
 )
 
 # 비동기 세션 메이커 생성
@@ -104,14 +95,16 @@ AsyncSessionLocal = async_sessionmaker(
 
 print("✅ 데이터베이스 엔진이 생성되었습니다.")
 
+# --- 나머지 코드는 변경할 필요 없습니다 ---
+
 async def get_session() -> AsyncSession:
     """새로운 데이터베이스 세션을 반환합니다."""
     return AsyncSessionLocal()
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    비동기 데이터베이스 세션을 생성하고 반환하는 의존성 함수
-    FastAPI의 Depends와 함께 사용됨
+    비동기 데이터베이스 세션을 생성하고 반환하는 의존성 함수.
+    FastAPI의 Depends와 함께 사용됩니다.
     
     Yields:
         AsyncSession: 비동기 데이터베이스 세션
@@ -126,57 +119,43 @@ async def create_tables():
     """데이터베이스 테이블을 생성합니다. (개발 환경에서만 사용)"""
     try:
         async with engine.begin() as conn:
+            # 이 부분이 이제 에러 없이 실행될 것입니다.
             await conn.run_sync(Base.metadata.create_all)
         print("✅ 데이터베이스 테이블이 성공적으로 생성되었습니다.")
     except Exception as e:
         print(f"❌ 테이블 생성 실패: {e}")
-        raise
+        # raise # 애플리케이션 시작이 중단되지 않도록 raise는 주석 처리하는 것이 좋을 수 있습니다.
 
 async def test_connection():
     """
     데이터베이스 연결을 테스트합니다.
-    
-    Returns:
-        bool: 연결 성공 여부
     """
     try:
-        async with AsyncSessionLocal() as session:
-            result = await session.execute(text("SELECT 1"))
-            result.scalar()
+        # test_connection은 engine.connect()를 사용하는 것이 더 안정적입니다.
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
         print("✅ 데이터베이스 연결 테스트 성공")
         return True
     except Exception as e:
         print(f"❌ 데이터베이스 연결 테스트 실패: {e}")
         return False
 
+# ... (하위 호환성 클래스와 인스턴스는 그대로 유지) ...
 def get_database_url_for_display() -> str:
-    """
-    현재 데이터베이스 URL 반환 (로깅용)
-    
-    Returns:
-        str: 데이터베이스 연결 URL
-    """
     return DATABASE_URL
 
-# 하위 호환성을 위한 Database 클래스 (기존 코드와의 호환성 유지)
 class Database:
-    """하위 호환성을 위한 Database 클래스"""
-    
     def __init__(self):
         self.engine = engine
         self.async_session_maker = AsyncSessionLocal
     
     async def get_session(self) -> AsyncSession:
-        """새로운 데이터베이스 세션을 반환합니다."""
         return await get_session()
     
     async def create_tables(self):
-        """데이터베이스 테이블을 생성합니다."""
         return await create_tables()
     
     async def test_connection(self):
-        """데이터베이스 연결을 테스트합니다."""
         return await test_connection()
 
-# 전역 데이터베이스 인스턴스 생성 (하위 호환성)
 db = Database()

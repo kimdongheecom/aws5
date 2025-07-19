@@ -25,10 +25,16 @@ const Navigation = () => {
     router.push('/auth/login');
   };
 
-  const handleLogout = () => {
-    signout();
-    setDropdownOpen(false);
-    router.push('/auth/login');
+  const handleLogout = async () => {
+    try {
+      await signout();
+      setDropdownOpen(false);
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error);
+      // 로그아웃 실패해도 로그인 페이지로 이동
+      router.push('/auth/login');
+    }
   };
 
   // Close dropdown when clicking outside
