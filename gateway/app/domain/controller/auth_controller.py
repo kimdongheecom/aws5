@@ -37,8 +37,8 @@ class AuthController:
                 raise ValueError("OAuth 응답이 올바르지 않습니다.")
 
             
-            # 대시보드로 직접 리다이렉트
-            redirect_url = state if state else "http://localhost:3000/dashboard"
+            # 대시보드로 직접 리다이렉트 (state 파라미터 대신 고정 URL 사용)
+            redirect_url = "http://localhost:3000/dashboard"
             print(f"3. 리다이렉트 URL: {redirect_url}")
             
             response = RedirectResponse(url=redirect_url)

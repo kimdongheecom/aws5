@@ -60,7 +60,13 @@ def get_connect_args() -> dict:
     데이터베이스 연결 옵션을 반환합니다.
     pgbouncer는 prepared statement를 지원하지 않으므로 비활성화합니다.
     """
-    return {"server_settings": {"statement_cache_size": "0"}}
+    return {
+        "server_settings": {
+            "statement_cache_size": "0"
+        },
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0
+    }
 
 # 데이터베이스 연결 URL 생성
 DATABASE_URL = get_database_url()
@@ -86,7 +92,7 @@ engine = create_async_engine(
     max_overflow=10,
     pool_timeout=30,
     pool_recycle=3600,
-    connect_args=get_connect_args()
+    connect_args={"statement_cache_size": 0}
 )
 
 # 비동기 세션 메이커 생성

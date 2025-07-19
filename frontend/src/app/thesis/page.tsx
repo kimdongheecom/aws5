@@ -98,23 +98,7 @@ const ESGDashboard: React.FC = () => {
 
   // 선택된 기업에 따른 데이터 필터링
   const getFilteredData = () => {
-    if (selectedCompany === 'rosneft') {
-      return rosneftData.map(item => ({
-        year: item.year,
-        economic: item.economic,
-        environmental: item.environmental,
-        social: item.social,
-        sd: item.sdIndex
-      }));
-    } else if (selectedCompany === 'lukoil') {
-      return lukoilData.map(item => ({
-        year: item.year,
-        economic: item.economic,
-        environmental: item.environmental,
-        social: item.social,
-        sd: item.sdIndex
-      }));
-    }
+    // 항상 combinedData를 사용하도록 하여 데이터 구조를 일관성 있게 유지합니다.
     return combinedData;
   };
 
@@ -227,130 +211,34 @@ const ESGDashboard: React.FC = () => {
                   <Tooltip />
                   <Legend />
                   
-                  {/* 단일 기업 모드 - Rosneft */}
-                  {selectedCompany === 'rosneft' && selectedMetric === 'economic' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="economic" 
-                      stroke="#ff6b6b" 
+                  {/* Rosneft 라인 ( 'rosneft' 또는 'both' 선택 시 렌더링) */}
+                  {(selectedCompany === 'rosneft' || selectedCompany === 'both') && (
+                    <Line
+                      type="monotone"
+                      dataKey={`rosneft_${selectedMetric}`}
+                      name={`Rosneft ${selectedMetric === 'economic' ? '경제' : selectedMetric === 'environmental' ? '환경' : '사회'} 지표`}
+                      stroke={
+                        selectedMetric === 'economic' ? '#ff6b6b' :
+                        selectedMetric === 'environmental' ? '#ff9f43' : '#a55eea'
+                      }
                       strokeWidth={3}
-                      name="경제 지표"
-                      dot={{ r: 6 }}
-                    />
-                  )}
-                  {selectedCompany === 'rosneft' && selectedMetric === 'environmental' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="environmental" 
-                      stroke="#ff9f43" 
-                      strokeWidth={3}
-                      name="환경 지표"
-                      dot={{ r: 6 }}
-                    />
-                  )}
-                  {selectedCompany === 'rosneft' && selectedMetric === 'social' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="social" 
-                      stroke="#a55eea" 
-                      strokeWidth={3}
-                      name="사회 지표"
                       dot={{ r: 6 }}
                     />
                   )}
 
-                  {/* 단일 기업 모드 - Lukoil */}
-                  {selectedCompany === 'lukoil' && selectedMetric === 'economic' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="economic" 
-                      stroke="#4ecdc4" 
+                  {/* Lukoil 라인 ( 'lukoil' 또는 'both' 선택 시 렌더링) */}
+                  {(selectedCompany === 'lukoil' || selectedCompany === 'both') && (
+                    <Line
+                      type="monotone"
+                      dataKey={`lukoil_${selectedMetric}`}
+                      name={`Lukoil ${selectedMetric === 'economic' ? '경제' : selectedMetric === 'environmental' ? '환경' : '사회'} 지표`}
+                      stroke={
+                        selectedMetric === 'economic' ? '#4ecdc4' :
+                        selectedMetric === 'environmental' ? '#26de81' : '#fd79a8'
+                      }
                       strokeWidth={3}
-                      name="경제 지표"
                       dot={{ r: 6 }}
                     />
-                  )}
-                  {selectedCompany === 'lukoil' && selectedMetric === 'environmental' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="environmental" 
-                      stroke="#26de81" 
-                      strokeWidth={3}
-                      name="환경 지표"
-                      dot={{ r: 6 }}
-                    />
-                  )}
-                  {selectedCompany === 'lukoil' && selectedMetric === 'social' && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="social" 
-                      stroke="#fd79a8" 
-                      strokeWidth={3}
-                      name="사회 지표"
-                      dot={{ r: 6 }}
-                    />
-                  )}
-
-                  {/* 전체 비교 모드 */}
-                  {selectedCompany === 'both' && selectedMetric === 'economic' && (
-                    <>
-                      <Line 
-                        type="monotone" 
-                        dataKey="rosneft_economic" 
-                        stroke="#ff6b6b" 
-                        strokeWidth={3}
-                        name="Rosneft 경제지표"
-                        dot={{ r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="lukoil_economic" 
-                        stroke="#4ecdc4" 
-                        strokeWidth={3}
-                        name="Lukoil 경제지표"
-                        dot={{ r: 6 }}
-                      />
-                    </>
-                  )}
-                  {selectedCompany === 'both' && selectedMetric === 'environmental' && (
-                    <>
-                      <Line 
-                        type="monotone" 
-                        dataKey="rosneft_environmental" 
-                        stroke="#ff9f43" 
-                        strokeWidth={3}
-                        name="Rosneft 환경지표"
-                        dot={{ r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="lukoil_environmental" 
-                        stroke="#26de81" 
-                        strokeWidth={3}
-                        name="Lukoil 환경지표"
-                        dot={{ r: 6 }}
-                      />
-                    </>
-                  )}
-                  {selectedCompany === 'both' && selectedMetric === 'social' && (
-                    <>
-                      <Line 
-                        type="monotone" 
-                        dataKey="rosneft_social" 
-                        stroke="#a55eea" 
-                        strokeWidth={3}
-                        name="Rosneft 사회지표"
-                        dot={{ r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="lukoil_social" 
-                        stroke="#fd79a8" 
-                        strokeWidth={3}
-                        name="Lukoil 사회지표"
-                        dot={{ r: 6 }}
-                      />
-                    </>
                   )}
                 </LineChart>
               </ResponsiveContainer>

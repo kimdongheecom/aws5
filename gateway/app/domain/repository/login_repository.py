@@ -28,13 +28,14 @@ class LoginRepository:
             db_user = os.getenv('DB_USER', 'postgres')
             db_pass = os.getenv('DB_PASS', 'postgres')
             
-            # 연결 풀 생성
+            # 연결 풀 생성 (statement_cache_size=0 추가)
             self.pool = await asyncpg.create_pool(
                 host=db_host,
                 port=db_port,
                 database=db_name,
                 user=db_user,
-                password=db_pass
+                password=db_pass,
+                statement_cache_size=0
             )
             
         if not self.pool:
