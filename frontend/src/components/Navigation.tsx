@@ -14,11 +14,7 @@ const Navigation = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogoClick = () => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    } else {
-      router.push('/');
-    }
+    router.push('/');
   };
 
   const handleLogin = () => {
@@ -36,6 +32,9 @@ const Navigation = () => {
       router.push('/auth/login');
     }
   };
+
+  // 로그인 페이지에서는 버튼 숨기기
+  const isLoginPage = pathname === '/auth/login';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -56,8 +55,7 @@ const Navigation = () => {
         <div className="h-14 flex items-center justify-between">
           {/* Left - Logo */}
           <button onClick={handleLogoClick} className="flex items-center cursor-pointer">
-            <span className="text-blue-600 mr-2">🌐</span>
-            <span className="text-gray-700 font-medium">{user?.name || 'KIM DONGHEE'}</span>
+            <span className="text-gray-700 font-bold hover:text-blue-600 transition-colors">KIM DONGHEE</span>
           </button>
 
           {/* Center - Navigation Links */}
@@ -82,45 +80,50 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* Right - Buttons */}
-          <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <div className="relative" ref={dropdownRef}>
-                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-blue-500 transition-colors">
-                  <Image
-                    src="/images/profile-icon.svg"
-                    alt="Profile"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
+          {/* 로그인/프로필 버튼 */}
+          {!isLoginPage && (
+            <div className="flex items-center gap-4">
+              {isAuthenticated ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <Image src="/images/profile-icon.svg" alt="Profile" width={20} height={20} />
+                    </div>
+                    <span className="hidden sm:block font-medium">{user?.name}</span>
+                  </button>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                      <Link href="/notifications" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Bell className="inline-block w-4 h-4 mr-2" />
+                        알림
+                      </Link>
+                      <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <LayoutDashboard className="inline-block w-4 h-4 mr-2" />
+                        대시보드
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <LogOut className="inline-block w-4 h-4 mr-2" />
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  로그인
                 </button>
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
-                    <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" onClick={() => setDropdownOpen(false)}>
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      대시보드
-                    </Link>
-                    <Link href="/notifications" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" onClick={() => setDropdownOpen(false)}>
-                      <Bell className="w-4 h-4 mr-2" />
-                      알림
-                    </Link>
-                    <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      로그아웃
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={handleLogin}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                로그인
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>

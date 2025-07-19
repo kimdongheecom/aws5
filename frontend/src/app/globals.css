@@ -11,7 +11,25 @@
   body {
     @apply font-inter text-regular text-waterloo dark:text-manatee relative z-1;
     background-color: white !important;
+    @apply bg-white dark:bg-black;
   }
+}
+
+/* Add these new animation styles */
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+@keyframes pulse-slow-delay {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.15); opacity: 0.6; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 8s infinite ease-in-out;
+}
+.animate-pulse-slow-delay {
+    animation: pulse-slow-delay 10s infinite ease-in-out;
+    animation-delay: 2s;
 }
 
 /* ------------- Custom Components Layer ------------- */
