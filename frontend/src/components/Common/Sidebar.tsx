@@ -196,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
                       </Link>
                     </li>
                     <li>
-                      <Link href="/esg-performance/environmental" className="block py-1 text-gray-600 hover:text-blue-500">
+                      <Link href="/esg-performance/environmental/resource-circulation" className="block py-1 text-gray-600 hover:text-blue-500">
                         자원순환
                       </Link>
                     </li>
@@ -237,7 +237,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
                       </Link>
                     </li>
                     <li>
-                      <Link href="/esg-performance/social" className="block py-1 text-gray-600 hover:text-blue-500">
+                      <Link href="/esg-performance/social/labor-relations" className="block py-1 text-gray-600 hover:text-blue-500">
                         건전한 노사관계
                       </Link>
                     </li>

@@ -252,15 +252,15 @@ export default function ContactPage() {
                 <p>러시아 노보시비르스크 국립대 재무경영학 석사과정 중, 기업의 지속가능성을 정량적으로 평가하는 알고리즘 개발 논문을 작성하며 분석적 역량을 다졌습니다.</p>
                 <p className="font-medium text-gray-700">🏆 ISSC-2023 국제 과학 학생 콘퍼런스 2위 수상 (영어 발표)</p>
               </TimelineItem>
-              <TimelineItem icon={<Briefcase className="w-4 h-4 text-blue-600"/>} title="컨설팅 현장 - 전략가" period="2024">
+              <TimelineItem icon={<Briefcase className="w-4 h-4 text-blue-600"/>} title="컨설팅 현장 - 컨설턴트" period="2024">
                 <p>㈜지속가능경영연구소에서 ESG 컨설턴트로 근무하며 대기업 및 공공기관의 지속가능경영 보고서 발간 프로젝트를 수행, 현장의 문제를 깊이 이해하고 전략적 해결 능력을 길렀습니다.</p>
                 <p className="font-medium text-gray-700">🚀 주요 프로젝트: LG CNS, SPC, 두산퓨얼셀, 한국중부발전</p>
               </TimelineItem>
-              <TimelineItem icon={<TrendingUp className="w-4 h-4 text-blue-600"/>} title="기술로의 전환 - 혁신가" period="현재">
+              <TimelineItem icon={<TrendingUp className="w-4 h-4 text-blue-600"/>} title="기술로의 전환 - 프롬프팅 엔지니어링" period="현재">
                 <p>삼정KPMG의 'ESG 보고서 자동화 과정'을 통해 컨설팅 경험에서 발견한 비효율을 기술로 해결하기 위한 전문 역량을 강화하고 있습니다.</p>
                 <p className="font-medium text-gray-700">💡 학습 분야: AI 기반 데이터 분석, 생성형 AI, 자동화 플랫폼 구축</p>
               </TimelineItem>
-              <TimelineItem icon={<Code className="w-4 h-4 text-blue-600"/>} title="혁신의 실천 - 개발자" period="현재">
+              <TimelineItem icon={<Code className="w-4 h-4 text-blue-600"/>} title="혁신의 실천 - 프롬프팅 엔지니어링" period="현재">
                 <p>K-디지털 트레이닝 해커톤에서 'ESG-AI' 팀장으로, 생성형 AI를 활용한 ESG 보고서 자동화 솔루션을 직접 설계하고 개발하며 학습한 기술을 실체적인 가치로 전환하고 있습니다.</p>
                 <p className="font-medium text-gray-700">🛠️ 역할: 프로젝트 총괄, 아키텍처 설계, AI 모델 개발 및 백엔드 구현</p>
               </TimelineItem>
