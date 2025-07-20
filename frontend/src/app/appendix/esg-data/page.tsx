@@ -15,12 +15,10 @@ const DataTable = ({ title, headers, data }) => (
     <div className="bg-gray-50 p-4 rounded-lg border">
         <h3 className="font-bold text-md text-blue-600 mb-3">{title}</h3>
         <div className="overflow-x-auto">
-            {/* grid-cols-5를 grid-cols-6으로 수정하여 열 개수를 맞춥니다. */}
             <div className="grid grid-cols-6 gap-2 py-2 border-b bg-gray-200 font-bold text-xs text-center">
                 {headers.map((header, index) => <div key={index} className={header === '구분' ? 'col-span-2' : 'col-span-1'}>{header}</div>)}
             </div>
             {data.map((row, rowIndex) => (
-                // grid-cols-5를 grid-cols-6으로 수정하여 열 개수를 맞춥니다.
                 <div key={rowIndex} className="grid grid-cols-6 gap-2 py-1.5 border-b text-xs text-center items-center">
                     <div className="col-span-2 text-left font-semibold">{row.category}</div>
                     <div className="col-span-1 text-gray-600">{row.unit}</div>
@@ -74,22 +72,24 @@ export default function ESGDataPage() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column */}
-            <div className="space-y-6">
-                <InfoSection title="환경 Data">
-                    <DataTable title="온실가스 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={ghgData} />
-                </InfoSection>
-                <DataTable title="에너지 소비량" headers={['구분', '단위', '2021', '2022', '2023']} data={energyData} />
-                <DataTable title="용수 관리" headers={['구분', '단위', '2021', '2022', '2023']} data={waterData} />
-            </div>
+        <main className="flex-grow">
+            <InfoSection title="환경 Data">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Left Column */}
+                    <div className="space-y-6">
+                        <DataTable title="온실가스 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={ghgData} />
+                        <DataTable title="에너지 소비량" headers={['구분', '단위', '2021', '2022', '2023']} data={energyData} />
+                        <DataTable title="용수 관리" headers={['구분', '단위', '2021', '2022', '2023']} data={waterData} />
+                    </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
-                 <DataTable title="수질오염물질 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={waterPollutionData} />
-                 <DataTable title="대기오염물질 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={airPollutionData} />
-                 <DataTable title="폐기물 관리" headers={['구분', '단위', '2021', '2022', '2023']} data={wasteData} />
-            </div>
+                    {/* Right Column */}
+                    <div className="space-y-6">
+                         <DataTable title="수질오염물질 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={waterPollutionData} />
+                         <DataTable title="대기오염물질 배출량" headers={['구분', '단위', '2021', '2022', '2023']} data={airPollutionData} />
+                         <DataTable title="폐기물 관리" headers={['구분', '단위', '2021', '2022', '2023']} data={wasteData} />
+                    </div>
+                </div>
+            </InfoSection>
         </main>
         
         {/* 주석 영역 추가 */}
