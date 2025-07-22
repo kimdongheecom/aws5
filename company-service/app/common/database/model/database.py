@@ -38,20 +38,35 @@ def get_database_url() -> str:
     if not all([db_host, db_pass, db_user, db_name, db_port]):
         raise ValueError("데이터베이스 연결을 위한 환경 변수가 충분하지 않습니다. (DB_HOST, DB_PASS 등)")
 
-    # postgresql+asyncpg 드라이버를 사용
+    # 🔧 [수정] URL 파라미터 제거, connect_args로 처리
     return f"postgresql+asyncpg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
-# Supabase PgBouncer는 transaction pooling을 사용하므로, prepared statement cache가 문제를 일으킬 수 있음
-# statement_cache_size=0 으로 설정하여 비활성화
-connect_args = {"statement_cache_size": 0}
+DATABASE_URL = get_database_url()
+
+# 🔧 [핵심 수정] connect_args에 정수 값으로 전달
+connect_args = {
+    "prepared_statement_cache_size": 0,  # 정수로 전달
+    "statement_cache_size": 0,          # 정수로 전달
+    "server_settings": {
+        "application_name": "company_service",
+        "jit": "off",
+        "statement_timeout": "0",  # 추가: statement timeout 비활성화
+        "lock_timeout": "0"        # 추가: lock timeout 비활성화
+    }
+}
 
 # 데이터베이스 엔진 생성
 engine = create_async_engine(
-    get_database_url(),
-    echo=False, # 운영 환경에서는 False로 유지
-    pool_size=5,
-    max_overflow=10,
-    connect_args=connect_args # ✅ 핵심 설정 적용
+    DATABASE_URL, 
+    echo=True,
+    connect_args=connect_args,  # 정수 값으로 전달
+    pool_size=1,
+    max_overflow=0,
+    pool_pre_ping=False,
+    pool_recycle=60,
+    # 🔧 [추가] DuplicatePreparedStatementError 완전 방지
+    pool_reset_on_return="commit",  # 연결 반환 시 커밋으로 리셋
+    isolation_level="AUTOCOMMIT"    # 자동 커밋 모드
 )
 
 # 비동기 세션 메이커 생성

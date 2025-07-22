@@ -17,27 +17,11 @@ class LoginService:
         self.login_repo = login_repo
         self.profile_repo = profile_repo
         
-    async def get_google_auth_url(self, redirect_uri: str) -> str:
-        """Google OAuth 인증 URL을 생성합니다"""
-        client_id = os.getenv('GOOGLE_CLIENT_ID', '')
-        callback_uri = f"{os.getenv('GATEWAY_URL', 'http://localhost:8080')}/auth/google/callback"
-        scope = "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
-
-        params = {
-            'client_id': client_id,
-            'redirect_uri': callback_uri,
-            'response_type': 'code',
-            'scope': scope,
-            'access_type': 'offline',
-            'prompt': 'consent',
-            'state': redirect_uri
-        }
-        return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
-    
     async def handle_google_callback(self, code: str) -> Dict[str, Any]:
         """Google OAuth 콜백을 처리하고 DB에 사용자 정보를 저장합니다"""
         
         token_response = await self._exchange_code_for_token(code)
+        print(f"🔍 Token response: {token_response}")
         access_token = token_response.get('access_token')
         if not access_token:
             raise Exception("Google로부터 토큰을 받아오지 못했습니다.")
@@ -49,13 +33,23 @@ class LoginService:
             raise Exception("Google로부터 사용자 정보를 받아오지 못했습니다. ('id' 필드 누락)")
         
         user_id = user_info['id']
+        print(f"🔍 User ID type: {type(user_id)}, value: {user_id}")
+
+        # 🔧 [수정] Google ID를 문자열로 확실히 변환
+        user_id = str(user_id)
+        print(f"🔍 Converted User ID type: {type(user_id)}, value: {user_id}")
+
+        expires_in = token_response.get('expires_in', 3600)
+        print(f"🔍 Expires_in type: {type(expires_in)}, value: {expires_in}")
+        expires_in_int = int(expires_in)
+        print(f"🔍 Converted expires_in type: {type(expires_in_int)}, value: {expires_in_int}")
 
         login_data = {
             'id': user_id,
             'provider': 'google',
             'access_token': access_token,
             'refresh_token': token_response.get('refresh_token'),
-            'expires_at': datetime.now() + timedelta(seconds=token_response.get('expires_in', 3600)),
+            'expires_at': datetime.now() + timedelta(seconds=expires_in_int),
             'created_at': datetime.now()
         }
         

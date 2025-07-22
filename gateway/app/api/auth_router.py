@@ -19,12 +19,11 @@ router = APIRouter()
 async def google_login(
     redirect_uri: str = Query(default="http://localhost:3000/dashboard")
 ):
-    # 컨트롤러를 직접 초기화하지 않고, 임시로 서비스만 사용
-    # 실제로는 컨트롤러 패턴을 일관되게 사용해야 함
-    # 이 부분은 단순 리다이렉트라 DB 세션이 필요 없음
-    temp_service = LoginService(None, None) # 임시 인스턴스
-    auth_controller = AuthController(temp_service)
-    return await auth_controller.start_google_login(redirect_uri)
+    """
+    Google OAuth 로그인을 시작하는 엔드포인트입니다.
+    DB 세션이 필요 없으므로 컨트롤러의 정적 메소드를 직접 호출합니다.
+    """
+    return AuthController.start_google_login(redirect_uri)
 
 @router.get("/google/callback", summary="Google OAuth 콜백 처리")
 async def google_callback(
