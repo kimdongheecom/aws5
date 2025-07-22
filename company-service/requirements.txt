@@ -1,0 +1,16 @@
+# company-service/requirements.txt
+
+# Core web framework
+fastapi==0.110.0
+
+# ASGI server to run FastAPI
+uvicorn==0.27.1
+
+# Asynchronous ORM for database interaction
+sqlalchemy==2.0.27
+
+# Asynchronous driver for PostgreSQL (to connect to Supabase)
+asyncpg==0.28.0
+
+# For loading environment variables from .env file
+python-dotenv==1.0.1

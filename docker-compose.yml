@@ -10,6 +10,17 @@ services:
     restart: always
     networks:
       - lif-network
+  company-service:
+    build: ./company-service
+    ports:
+      - "8011:8011"
+    env_file:
+      - ./company-service/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+    networks:
+      - lif-network
 
   sasb-service:
     build: ./sasb-service
@@ -119,6 +130,7 @@ services:
       - stock-service
       - thesis-service
       - gri-service
+      - company-service
     networks:
       - lif-network
   # =========================================================

@@ -61,6 +61,7 @@ const Navigation = () => {
           {/* Center - Navigation Links */}
           <div className="hidden md:flex items-center gap-6 text-sm">
             {[
+              { href: "/company", label: "Company" },
               { href: "/contact", label: "Contact" },
               { href: "/esg-report", label: "ESG Report" },
               { href: "/stock-price", label: "Stock Price" },

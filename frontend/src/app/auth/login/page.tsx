@@ -18,18 +18,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // NOTE: 이 함수는 실제 이메일/비밀번호 로그인 로직으로 대체되어야 합니다.
   const handleEmailLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('이메일/비밀번호 로그인 시도:', { email, password });
-    // 여기에 실제 로그인 API 호출 로직을 추가해야 합니다.
   };
   
+  // ✨ [핵심 수정] handleGoogleLogin 함수 수정
   const handleGoogleLogin = useCallback(() => {
     console.log('🚀 Google 로그인 시작');
     try {
-      const redirectUri = `${window.location.origin}/auth/google/callback`;
+      // [수정] redirectUri를 최종 목적지인 '/dashboard'로 변경합니다.
+      // 이렇게 하면 백엔드가 모든 처리를 끝내고 사용자를 바로 대시보드로 보냅니다.
+      const redirectUri = `${window.location.origin}/dashboard`;
+      
       const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      
+      // 백엔드의 로그인 시작 URL 호출 (redirect_uri를 state 파라미터로 사용)
       const googleOAuthUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
       
       console.log('🌐 Google OAuth URL로 리다이렉트:', googleOAuthUrl);
