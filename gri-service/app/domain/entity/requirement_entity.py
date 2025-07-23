@@ -2,7 +2,7 @@
 
 from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.common.database import Base
+from app.common.database.model.database import Base
 from app.domain.entity.disclosure_entity import DisclosureEntity
 from app.domain.entity.answer_entity import AnswerEntity
 

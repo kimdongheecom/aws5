@@ -3,7 +3,7 @@
 from typing import List
 from sqlalchemy import String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.common.database import Base
+from app.common.database.model.database import Base
 from app.domain.entity.company_entity import Company
 from app.domain.entity.answer_entity import AnswerEntity
 

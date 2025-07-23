@@ -3,7 +3,7 @@
 from typing import List
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.common.database import Base # 공통 Base 클래스를 임포트합니다.
+from app.common.database.model.database import Base # 공통 Base 클래스를 임포트합니다.
 from app.domain.entity.disclosure_entity import DisclosureEntity
 
 class CategoryEntity(Base):

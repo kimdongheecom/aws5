@@ -4,7 +4,7 @@ import uuid
 from typing import List # List 임포트 추가
 from sqlalchemy import String, Text, Date, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship # relationship 임포트 추가
-from app.common.database import Base
+from app.common.database.model.database import Base
 from app.domain.entity.profile_entity import ProfileEntity
 from app.domain.entity.sample_entity import SampleEntity
 
