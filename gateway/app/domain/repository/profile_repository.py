@@ -3,15 +3,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.database.model.database import Profile
 
 class ProfileRepository:
-    def __init__(self, session: AsyncSession): self.session = session
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        
     async def upsert_profile(self, profile_data: dict) -> Profile:
         user_id = profile_data.get('id')
         if not user_id:
             raise ValueError("upsert_profile에 'id'가 필요합니다.")
 
-        # ✅ [수정] execution_options 제거하고 간단한 select 문 사용
+        # ✅ [수정] execution_options 제거
         stmt = select(Profile).where(Profile.id == user_id)
-
         result = await self.session.execute(stmt)
         existing_profile = result.scalar_one_or_none()
 

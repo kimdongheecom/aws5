@@ -91,4 +91,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     logger.info(f"로컬 개발 서버를 시작합니다. http://localhost:{port}")
-    uvicorn.run("main:app", host="0.0.0.0", port=port)  # ✅ [수정] reload=True 제거
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

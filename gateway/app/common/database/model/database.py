@@ -1,14 +1,9 @@
-
-
 import os
 from typing import AsyncGenerator, Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Text, DateTime, func, text
-from sqlalchemy.pool import NullPool
-
-# main.py에서 .env를 로드하므로 여기서는 실행하지 않습니다.
+from sqlalchemy import String, Text, DateTime, func
 
 # --- 모델 정의 (변경 없음) ---
 class Base(DeclarativeBase):
@@ -31,32 +26,37 @@ class LoginEntityDB(Base):
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-# --- 데이터베이스 연결 설정 (최종 수정본) ---
+# --- 데이터베이스 연결 설정 (수정) ---
 def get_database_url() -> str:
     """환경 변수를 사용하여 완전한 데이터베이스 URL을 생성합니다."""
     db_host = os.getenv('DB_HOST')
-    db_port = os.getenv('DB_PORT', '6543')
+    # ✅ [수정] 직접 연결 기본 포트 5432로 변경
+    db_port = os.getenv('DB_PORT', '5432') 
     db_name = os.getenv('DB_NAME', 'postgres')
     db_user = os.getenv('DB_USER', 'postgres')
     db_pass = os.getenv('DB_PASS')
+
+    if not all([db_host, db_pass]):
+        raise ValueError("데이터베이스 연결 정보(.env)가 올바르게 설정되지 않았습니다: DB_HOST, DB_PASS")
     
     return f"postgresql+asyncpg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
 DATABASE_URL = get_database_url()
 
-# [최종 결전] NullPool을 사용하여 연결 풀링 완전 비활성화
+# ✅ [핵심 수정] 직접 연결을 위해 SQLAlchemy의 기본 연결 풀(QueuePool)을 사용하도록 변경
+# NullPool과 Pooler를 위한 각종 비활성화 옵션을 모두 제거합니다.
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,
-    connect_args={
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0
-    },
-    # ✅ [핵심] NullPool 사용으로 연결 풀링 완전 비활성화
-    poolclass=NullPool
+    echo=True, # 개발 중에는 True, 프로덕션에서는 False로 변경 권장
+    pool_size=5,  # 애플리케이션 부하에 맞게 조절
+    max_overflow=10 # 애플리케이션 부하에 맞게 조절
 )
 
-AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
 
 # --- FastAPI 의존성 주입 함수 (변경 없음) ---
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

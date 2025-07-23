@@ -24,4 +24,4 @@ COPY . .
 
 # 7. 포트 노출 및 실행 명령어
 EXPOSE 8080
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]

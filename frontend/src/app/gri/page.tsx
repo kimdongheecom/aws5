@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navigation from '../../components/Navigation';
+import axios from 'axios';
 
 export default function GRIPage() {
   const [griData, setGriData] = useState('');
@@ -1079,57 +1080,69 @@ export default function GRIPage() {
 
   // Requirements 답변을 기반으로 Suggested Statement 생성
   const handleSaveRequirements = async (disclosureId) => {
-    // 현재 disclosure의 모든 requirements에 대한 답변 수집
-    const requirements = getRequirementsForDisclosure(disclosureId);
-    const answers = requirements.map(req => ({
-      questionId: req.id,
-      question: req.question,
-      answer: requirementInputs[req.id] || ''
-    })).filter(item => item.answer.trim() !== ''); // 빈 답변 제외
+    // 1. 저장할 답변 데이터를 백엔드 스키마에 맞게 구조화된 배열로 만듭니다.
+    const requirementsForDisclosure = getRequirementsForDisclosure(disclosureId);
+    const answersToSave = requirementsForDisclosure.map(req => ({
+      requirement_id: req.id,
+      quant_data: requirementInputs[req.id] || ''
+    })).filter(item => item.quant_data.trim() !== '');
 
-    if (answers.length === 0) {
+    if (answersToSave.length === 0) {
       alert('저장할 답변이 없습니다. 최소 하나의 요구사항에 답변을 입력해주세요.');
       return;
     }
 
-    console.log('저장할 Requirements 답변:', answers);
-    
-    // Suggested Statement 자동 생성 시작
+    // 2. UI 로딩 상태를 설정합니다.
     setGeneratingStatement(disclosureId);
-    setShowSuggestedStatement(true); // Suggested Statement 카드 자동으로 열기
+    setShowSuggestedStatement(true);
 
     try {
-      // TODO: 백엔드 모델이 준비되면 실제 API 호출로 교체
-      // const response = await fetch('/api/gri/generate-statement', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     disclosureId,
-      //     requirements: answers,
-      //     model: 'statement-generation'
-      //   })
-      // });
+      // 3. 백엔드에 답변 저장을 요청합니다.
+      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const apiUrl = `${gatewayUrl}/e/v2/gri/answers`;
 
-      // 현재는 모의 응답으로 처리
-      await new Promise(resolve => setTimeout(resolve, 3000)); // 3초 모의 지연
+      // TODO: 실제 애플리케이션에서는 로그인 상태에서 사용자 ID를 가져와야 합니다.
+      const userId = "103270647320897156958"; 
 
-      // 모의 생성된 문장 (실제로는 백엔드에서 받아옴)
+      const requestBody = {
+        user_id: userId,
+        answers: answersToSave
+      };
+
+      console.log(`요청 URL: ${apiUrl}`);
+      console.log('백엔드로 보내는 요청 Body:', JSON.stringify(requestBody, null, 2));
+
+      // axios를 사용하여 백엔드에 POST 요청
+      const response = await axios.post(apiUrl, requestBody, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
+      });
+      
+      console.log('서버로부터의 답변 저장 응답:', response.data);
+      
+      // 4. 답변 저장 성공 후, AI 문장 생성을 시뮬레이션합니다.
+      // (이 부분은 프론트엔드 모의 로직이므로 그대로 유지)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       const mockGeneratedStatement = `[AI 생성] ${disclosureId}에 대한 답변을 바탕으로 생성된 보고서용 문장입니다.\n\n` +
-        `수집된 ${answers.length}개의 요구사항 답변을 종합하여 다음과 같이 보고합니다:\n\n` +
-        answers.map((answer, index) => `${index + 1}. ${answer.answer}`).join('\n\n') +
+        `수집된 ${answersToSave.length}개의 요구사항 답변을 종합하여 다음과 같이 보고합니다:\n\n` +
+        answersToSave.map((answer, index) => `${index + 1}. ${answer.quant_data}`).join('\n\n') +
         `\n\n위 내용을 바탕으로 당사는 ${disclosureId} 공시 요구사항을 충족하고 있으며, 지속적인 개선을 위해 노력하고 있습니다.`;
 
-      // 생성된 문장을 editedStatements에 저장
       setEditedStatements(prev => ({
         ...prev,
         [disclosureId]: mockGeneratedStatement
       }));
-
-      alert(`Requirements 답변이 저장되었고, ${disclosureId}에 대한 Suggested Statement가 생성되었습니다!`);
       
+      alert(`Requirements 답변이 저장되었고, ${disclosureId}에 대한 Suggested Statement가 생성되었습니다!`);
+
     } catch (error) {
-      console.error('Suggested Statement 생성 오류:', error);
-      alert('Requirements는 저장되었으나 Suggested Statement 생성 중 오류가 발생했습니다.');
+      console.error('데이터 저장 또는 문장 생성 오류:', error);
+      let errorMessage = '서버와 통신 중 오류가 발생했습니다.';
+      if (axios.isAxiosError(error) && error.response) {
+        errorMessage = error.response.data?.detail || JSON.stringify(error.response.data);
+      }
+      alert(`오류 발생: ${errorMessage}`);
     } finally {
       setGeneratingStatement(null);
     }
