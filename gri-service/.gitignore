@@ -132,3 +132,8 @@ Thumbs.db
 *.tar.gz
 *.zip
 *.rar
+
+
+# AI 모델 파일들 (용량이 큼)
+gri-service/app/domain/gri_peft_model/model/
+gri-service/app/domain/model/

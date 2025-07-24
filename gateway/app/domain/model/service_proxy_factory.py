@@ -42,7 +42,7 @@ class ServiceProxyFactory:
             headers_to_send['Content-Type'] = 'application/json'
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client: # 타임아웃 설정
+            async with httpx.AsyncClient(timeout=300.0) as client: # AI 모델 추론을 위해 타임아웃 5분으로 증가
                 response = await client.request(
                     method=method.upper(),
                     url=url,

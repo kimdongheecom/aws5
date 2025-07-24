@@ -1,0 +1,2 @@
+class CompanyController:
+    pass

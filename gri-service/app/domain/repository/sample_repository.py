@@ -1,0 +1,2 @@
+class SampleRepository:
+    pass

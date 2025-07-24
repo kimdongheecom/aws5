@@ -8,16 +8,15 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # --- 모델 설정 ---
-# KoAlpaca Polyglot 5.8B 모델 사용
+# 원본 모델 ID (참조용)
 MODEL_ID = "beomi/KoAlpaca-Polyglot-5.8B"
 
-# (변경) 모델을 다운로드할 기본 폴더 경로 (app/domain/model 폴더)
-# 하위 폴더(beomi/...)는 snapshot_download가 자동으로 생성합니다.
-MODEL_PATH = BASE_DIR / "app" / "domain" / "model"
+# 실제 기본 모델 경로
+MODEL_PATH = BASE_DIR / "app" / "domain" / "gri_peft_model" / "model" / "base_model"
 
 # --- LoRA 어댑터 설정 ---
-ADAPTERS_PATH = BASE_DIR / "app" / "domain" / "adapters"
-DEFAULT_ADAPTER = "gri_adapter"  # 기본 로딩할 어댑터 이름
+ADAPTERS_PATH = BASE_DIR / "app" / "domain" / "gri_peft_model" / "model"
+DEFAULT_ADAPTER = "lora_adapter"  # 실제 훈련된 어댑터 폴더명
 
 # GRI 전문가 어댑터 설정
 GRI_ADAPTER_CONFIG = {

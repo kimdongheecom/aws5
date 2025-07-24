@@ -3,8 +3,6 @@
 from sqlalchemy import BigInteger, Text, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.common.database.model.database import Base    
-from app.domain.entity.company_entity import Company
-from app.domain.entity.disclosure_entity import DisclosureEntity
 
 class SampleEntity(Base):
     __tablename__ = "sample"
@@ -18,10 +16,10 @@ class SampleEntity(Base):
     # 부모(disclosures)를 참조하는 외래 키 (1대1 관계를 위해 unique=True 추가)
     disclosure_id: Mapped[str] = mapped_column(ForeignKey("disclosures.id", ondelete="CASCADE"), unique=True, nullable=False)
 
-    # 부모 관계 설정 (N대1)
+    # 부모 관계 설정 (N대1) - Forward Reference 사용
     company: Mapped["Company"] = relationship(back_populates="samples")
 
-    # 부모 관계 설정 (1대1)
+    # 부모 관계 설정 (1대1) - Forward Reference 사용
     disclosure: Mapped["DisclosureEntity"] = relationship(back_populates="sample")
 
     def __repr__(self):

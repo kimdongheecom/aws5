@@ -1,0 +1,2 @@
+class SampleController:
+    pass

@@ -6,17 +6,19 @@ requests==2.32.3
 python-multipart==0.0.20
 
 # --- Database (Python 3.12.7 호환) ---
-sqlalchemy[asyncio]==2.0.36 # ✅ [수정] asyncio extras 포함
-asyncpg==0.29.0 # ✅ [수정] 동기용 psycopg2-binary 대신 비동기용 asyncpg 사용
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.29.0
 
-# --- AI Model & GPU Inference (Llama3, RTX 5060, CUDA 12.8 호환) ---
-torch>=2.5.0
-transformers==4.46.3
-accelerate==1.2.1
+# --- AI Model & GPU Inference ---
+# [설명] torch 관련 라이브러리는 Dockerfile에서 직접 설치하므로 여기서 제외합니다. (올바른 설정)
+# [설명] 최신 PyTorch와의 호환성을 위해 transformers와 accelerate 버전을 올리는 것이 좋습니다. (올바른 설정)
+transformers>=4.42.0
+accelerate>=0.32.0
 bitsandbytes==0.45.0
 huggingface-hub==0.26.5
 peft==0.15.2
 datasets==3.2.0
+triton>=2.2.0
 
 # --- Elasticsearch & Data Handling (Python 3.12.7 호환) ---
 elasticsearch==8.17.0

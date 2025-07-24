@@ -4,7 +4,6 @@ from typing import List
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.common.database.model.database import Base # 공통 Base 클래스를 임포트합니다.
-from app.domain.entity.disclosure_entity import DisclosureEntity
 
 class CategoryEntity(Base):
     __tablename__ = "categories"
@@ -15,7 +14,7 @@ class CategoryEntity(Base):
     year: Mapped[str] = mapped_column(String(4), nullable=True)
 
     # 자식 관계 설정 (Category 1 : N Disclosures)
-    # 'disclosures'는 DisclosureEntity에 있는 'category'와 연결됩니다.
+    # Forward Reference를 사용하여 순환 참조 해결
     disclosures: Mapped[List["DisclosureEntity"]] = relationship(
         back_populates="category"
     )

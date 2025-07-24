@@ -1124,10 +1124,8 @@ export default function GRIPage() {
       // (이 부분은 프론트엔드 모의 로직이므로 그대로 유지)
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const mockGeneratedStatement = `[AI 생성] ${disclosureId}에 대한 답변을 바탕으로 생성된 보고서용 문장입니다.\n\n` +
-        `수집된 ${answersToSave.length}개의 요구사항 답변을 종합하여 다음과 같이 보고합니다:\n\n` +
-        answersToSave.map((answer, index) => `${index + 1}. ${answer.quant_data}`).join('\n\n') +
-        `\n\n위 내용을 바탕으로 당사는 ${disclosureId} 공시 요구사항을 충족하고 있으며, 지속적인 개선을 위해 노력하고 있습니다.`;
+      const mockGeneratedStatement =  response.data.message;
+      console.log('👌👌👌👌👌mockGeneratedStatement:', mockGeneratedStatement);
 
       setEditedStatements(prev => ({
         ...prev,
@@ -1135,6 +1133,8 @@ export default function GRIPage() {
       }));
       
       alert(`Requirements 답변이 저장되었고, ${disclosureId}에 대한 Suggested Statement가 생성되었습니다!`);
+
+      // 이 자리에 모델 로더 서비스 호출 로직 추가
 
     } catch (error) {
       console.error('데이터 저장 또는 문장 생성 오류:', error);

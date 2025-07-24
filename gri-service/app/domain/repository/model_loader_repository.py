@@ -1,0 +1,2 @@
+class ModelLoaderRepository:
+    pass
