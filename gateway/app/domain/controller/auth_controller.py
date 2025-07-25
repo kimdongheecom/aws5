@@ -55,6 +55,10 @@ class AuthController:
             max_age_int = int(3600)  # 명시적으로 정수로 변환
             print(f"🔍 Controller: max_age type={type(max_age_int)}, value={max_age_int}")
             
+            # 환경별 쿠키 설정
+            env = os.getenv('ENVIRONMENT', 'development')
+            is_secure = env == 'production'
+            
             response.set_cookie(
                 key="session_token",
                 value=access_token,
@@ -62,7 +66,7 @@ class AuthController:
                 samesite="lax",
                 max_age=max_age_int,
                 path="/",
-                secure=False # 로컬 개발 시 False
+                secure=is_secure # 프로덕션에서는 True, 로컬에서는 False
             )
             print("🔍 Controller: 쿠키 설정 완료")
             return response
