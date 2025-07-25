@@ -53,8 +53,19 @@ async def get_profile(
     session_token: str | None = Cookie(None),
     db: AsyncSession = Depends(get_db) # 프로필 조회도 DB 작업이 필요할 수 있음
 ):
+    # 디버깅을 위한 로그 추가
+    print(f"🔍 [Profile Debug] Session token: {session_token}")
+    print(f"🔍 [Profile Debug] Session token type: {type(session_token)}")
+    print(f"🔍 [Profile Debug] Session token length: {len(session_token) if session_token else 0}")
+    
     if not session_token:
+        print("🔍 [Profile Debug] No session token found")
         raise HTTPException(status_code=401, detail="인증 쿠키가 없습니다.")
+    
+    if len(session_token) < 50:
+        print(f"🔍 [Profile Debug] Session token too short: {session_token}")
+        raise HTTPException(status_code=401, detail="유효하지 않은 세션 토큰입니다.")
+    
     try:
         # 여기도 의존성 주입 체인을 만들어줌
         login_repo = LoginRepository(session=db)
