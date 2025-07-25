@@ -46,6 +46,7 @@ class AuthController:
             
             # state(원래 사용자가 가려던 페이지)로 리다이렉트
             redirect_url = state
+            print(f"🔍 Controller: Redirecting to: {redirect_url}")
             response = RedirectResponse(url=redirect_url)
             
             # 세션 토큰을 쿠키에 설정
@@ -58,7 +59,11 @@ class AuthController:
             # 환경별 쿠키 설정
             env = os.getenv('ENVIRONMENT', 'development')
             is_secure = env == 'production'
+            print(f"🔍 Controller: Environment: {env}, Secure: {is_secure}")
             
+            print("🔍 Controller: About to set cookie...")
+            
+            # 도메인 설정 제거 (Railway에서 문제가 될 수 있음)
             response.set_cookie(
                 key="session_token",
                 value=access_token,
@@ -68,14 +73,15 @@ class AuthController:
                 path="/",
                 secure=is_secure # 프로덕션에서는 True, 로컬에서는 False
             )
-            print("🔍 Controller: 쿠키 설정 완료")
+            print(f"🔍 Controller: 쿠키 설정 완료 - secure={is_secure}, env={env}")
+            print(f"🔍 Controller: 쿠키 값: {access_token[:20]}...")
             return response
             
         except Exception as e:
             print(f"Google OAuth 콜백 처리 중 오류: {e}")
             import traceback
             print(f"🔍 Controller: 상세 오류 정보: {traceback.format_exc()}")
-            error_url = f"http://localhost:3000/auth/login?error=callback_failed"
+            error_url = f"https://www.kimdonghee.com/auth/login?error=callback_failed"
             return RedirectResponse(url=error_url)
 
     async def get_user_profile(self, session_token: str):
