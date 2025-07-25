@@ -41,41 +41,141 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS 미들웨어 설정
+# --- 3. CORS 미들웨어 설정 ---
+# 허용할 출처(프론트엔드 주소) 목록
 origins = [
-    "https://aws5-git-feature-supabase-gateway-kimdongheecoms-projects.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "https://www.kimdonghee.com",       # 실제 프로덕션 도메인
+    "https://kimdongheecom.vercel.app",  # Vercel 기본 프로덕션 도메인
+    "http://localhost:3000",             # 로컬 개발 환경 (프론트엔드)
+    "http://127.0.0.1:3000",            # 로컬 개발 환경 (프론트엔드)
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,             # 쿠키 기반 인증에 필수
+    allow_methods=["*"],                # 모든 HTTP 메소드 허용
+    allow_headers=["*"],                # 모든 HTTP 헤더 허용
 )
 
-# --- 3. 프록시 라우터 정의 ---
+
+# --- ▼▼▼▼▼ [요청사항 반영] 프록시 라우터 수정 ▼▼▼▼▼ ---
 proxy_router = APIRouter(prefix="/e/v2", tags=["Service Proxy"])
 
-@proxy_router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
-async def proxy_all(service: ServiceType, path: str, request: Request):
+@proxy_router.get("/health", summary="헬스 체크 엔드포인트")
+async def health_check():
+    """서비스가 정상적으로 실행 중인지 확인하는 간단한 엔드포인트입니다."""
+    logger.info("헬스 체크 요청 수신")
+    return {"status": "healthy!"}
+
+@proxy_router.get("/{service}/{path:path}", summary="GET 프록시")
+async def proxy_get(service: ServiceType, path: str, request: Request):
+    """GET 요청을 내부 서비스로 프록시합니다."""
+    logger.info(f"[PROXY >>] Method: GET, Service: {service.value}, Path: /{path}, Params: {request.query_params}")
+    
+    factory = ServiceProxyFactory(service_type=service)
+    headers = dict(request.headers)
+    headers.pop('host', None)
+
+    response = await factory.request(
+        method="GET",
+        path=path,
+        headers=headers,
+        params=dict(request.query_params)
+    )
+    
+    logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+
+@proxy_router.post("/{service}/{path:path}", summary="POST 프록시")
+async def proxy_post(service: ServiceType, path: str, request: Request):
+    """POST 요청을 내부 서비스로 프록시합니다."""
+    logger.info(f"[PROXY >>] Method: POST, Service: {service.value}, Path: /{path}, Params: {request.query_params}")
+    
     factory = ServiceProxyFactory(service_type=service)
     body = await request.body()
     headers = dict(request.headers)
-    
-    # Host 헤더는 내부 서비스로 전달하지 않는 것이 일반적입니다.
     headers.pop('host', None)
-    
+
     response = await factory.request(
-        method=request.method,
+        method="POST",
         path=path,
         headers=headers,
         body=body,
         params=dict(request.query_params)
     )
+    
+    logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
     return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+
+@proxy_router.put("/{service}/{path:path}", summary="PUT 프록시")
+async def proxy_put(service: ServiceType, path: str, request: Request):
+    """PUT 요청을 내부 서비스로 프록시합니다."""
+    logger.info(f"[PROXY >>] Method: PUT, Service: {service.value}, Path: /{path}, Params: {request.query_params}")
+    
+    factory = ServiceProxyFactory(service_type=service)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+
+    response = await factory.request(
+        method="PUT",
+        path=path,
+        headers=headers,
+        body=body,
+        params=dict(request.query_params)
+    )
+    
+    logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+
+@proxy_router.delete("/{service}/{path:path}", summary="DELETE 프록시")
+async def proxy_delete(service: ServiceType, path: str, request: Request):
+    """DELETE 요청을 내부 서비스로 프록시합니다."""
+    logger.info(f"[PROXY >>] Method: DELETE, Service: {service.value}, Path: /{path}, Params: {request.query_params}")
+    
+    factory = ServiceProxyFactory(service_type=service)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+
+    response = await factory.request(
+        method="DELETE",
+        path=path,
+        headers=headers,
+        body=body,
+        params=dict(request.query_params)
+    )
+    
+    logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+
+@proxy_router.patch("/{service}/{path:path}", summary="PATCH 프록시")
+async def proxy_patch(service: ServiceType, path: str, request: Request):
+    """PATCH 요청을 내부 서비스로 프록시합니다."""
+    logger.info(f"[PROXY >>] Method: PATCH, Service: {service.value}, Path: /{path}, Params: {request.query_params}")
+    
+    factory = ServiceProxyFactory(service_type=service)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop('host', None)
+    
+    response = await factory.request(
+        method="PATCH",
+        path=path,
+        headers=headers,
+        body=body,
+        params=dict(request.query_params)
+    )
+    
+    logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+# --- ▲▲▲▲▲ 여기까지 수정 ▲▲▲▲▲ ---
+
+
+
+
+
 
 # --- 4. 라우터 등록 ---
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
