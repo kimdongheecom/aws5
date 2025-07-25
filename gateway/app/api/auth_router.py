@@ -54,9 +54,9 @@ async def get_profile(
     db: AsyncSession = Depends(get_db) # 프로필 조회도 DB 작업이 필요할 수 있음
 ):
     # 디버깅을 위한 로그 추가
-    print(f"🔍 [Profile Debug] Session token: {session_token}")
-    print(f"🔍 [Profile Debug] Session token type: {type(session_token)}")
-    print(f"🔍 [Profile Debug] Session token length: {len(session_token) if session_token else 0}")
+    print(f"😊 [Profile Debug] Session token: {session_token}")
+    print(f"😊 [Profile Debug] Session token type: {type(session_token)}")
+    print(f"😊 [Profile Debug] Session token length: {len(session_token) if session_token else 0}")
     
     if not session_token:
         print("🔍 [Profile Debug] No session token found")
@@ -75,4 +75,5 @@ async def get_profile(
         
         return await auth_controller.get_user_profile(session_token)
     except Exception as e:
+        print(f"😢😢😢😢 [Profile Debug] Error: {e}")
         raise HTTPException(status_code=401, detail=str(e))

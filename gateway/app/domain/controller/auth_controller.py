@@ -63,21 +63,18 @@ class AuthController:
             
             print("🔍 Controller: About to set cookie...")
             
-            # 프로덕션에서는 도메인 설정 추가
+            # 쿠키 설정 (도메인 제거, SameSite를 None으로 변경)
             cookie_kwargs = {
                 'key': "session_token",
                 'value': access_token,
                 'httponly': True,
-                'samesite': "lax",
+                'samesite': "none" if is_secure else "lax",  # HTTPS에서는 none, HTTP에서는 lax
                 'max_age': max_age_int,
                 'path': "/",
                 'secure': is_secure
             }
             
-            if is_secure:
-                # 프로덕션에서는 도메인 설정
-                cookie_kwargs['domain'] = '.kimdonghee.com'
-                print(f"🔍 Controller: Setting cookie with domain: .kimdonghee.com")
+            print(f"🔍 Controller: Setting cookie with samesite={cookie_kwargs['samesite']}, secure={is_secure}")
             
             response.set_cookie(**cookie_kwargs)
             print(f"🔍 Controller: 쿠키 설정 완료 - secure={is_secure}, env={env}")
