@@ -6,7 +6,7 @@ import axios from 'axios';
 
 // axios 인스턴스 생성 (쿠키 자동 포함)
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   withCredentials: true, // httpOnly 쿠키 자동 포함
   headers: {
     'Content-Type': 'application/json',

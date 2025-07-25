@@ -43,7 +43,7 @@ const LoginForm = () => {
       const redirectUri = `${window.location.origin}/auth/google/callback`;
       
       // 백엔드 Google OAuth URL로 직접 리다이렉트
-      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const googleOAuthUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
       
       console.log('🌐 Google OAuth URL로 리다이렉트:', googleOAuthUrl);

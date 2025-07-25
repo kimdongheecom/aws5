@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // httpOnly 쿠키 기반 API 클라이언트
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // axios 인스턴스 생성 (쿠키 자동 포함)
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   withCredentials: true, // httpOnly 쿠키 자동 포함
   headers: {
     'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export const GoogleLoginButton = () => {
       console.log('📍 리다이렉트 URI:', redirectUri);
       
       // 백엔드 Google OAuth URL로 직접 리다이렉트
-      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const finalUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
       
       console.log('🌐 Google OAuth URL로 리다이렉트:', finalUrl);

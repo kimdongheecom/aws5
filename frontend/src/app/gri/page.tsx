@@ -1098,7 +1098,7 @@ export default function GRIPage() {
 
     try {
       // 3. 백엔드에 답변 저장을 요청합니다.
-      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       const apiUrl = `${gatewayUrl}/e/v2/gri/answers`;
 
       // TODO: 실제 애플리케이션에서는 로그인 상태에서 사용자 ID를 가져와야 합니다.
@@ -1196,7 +1196,7 @@ export default function GRIPage() {
 
     try {
       // ✅ [수정] 게이트웨이 URL을 사용하여 직접 백엔드 서비스 호출
-      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       
       // ✅ [수정] 백엔드 라우터 경로에 맞게 URL 수정 (`/e/v2/<서비스명>/<경로>`)
       // 이전에 `/gri/generate`로 잘못 안내드렸을 수 있습니다. 게이트웨이를 통과하는 최종 경로는

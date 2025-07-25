@@ -53,7 +53,7 @@ export default function CompanyPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+        const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
         const apiUrl = `${gatewayUrl}/e/v2/company/companies/`;
 
         const payload = {

@@ -31,7 +31,7 @@ export default function LoginPage() {
       // 이렇게 하면 백엔드가 모든 처리를 끝내고 사용자를 바로 대시보드로 보냅니다.
       const redirectUri = `${window.location.origin}/dashboard`;
       
-      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       
       // 백엔드의 로그인 시작 URL 호출 (redirect_uri를 state 파라미터로 사용)
       const googleOAuthUrl = `${gatewayUrl}/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
