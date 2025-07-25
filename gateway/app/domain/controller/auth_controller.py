@@ -63,16 +63,23 @@ class AuthController:
             
             print("🔍 Controller: About to set cookie...")
             
-            # 도메인 설정 제거 (Railway에서 문제가 될 수 있음)
-            response.set_cookie(
-                key="session_token",
-                value=access_token,
-                httponly=True,
-                samesite="lax",
-                max_age=max_age_int,
-                path="/",
-                secure=is_secure # 프로덕션에서는 True, 로컬에서는 False
-            )
+            # 프로덕션에서는 도메인 설정 추가
+            cookie_kwargs = {
+                'key': "session_token",
+                'value': access_token,
+                'httponly': True,
+                'samesite': "lax",
+                'max_age': max_age_int,
+                'path': "/",
+                'secure': is_secure
+            }
+            
+            if is_secure:
+                # 프로덕션에서는 도메인 설정
+                cookie_kwargs['domain'] = '.kimdonghee.com'
+                print(f"🔍 Controller: Setting cookie with domain: .kimdonghee.com")
+            
+            response.set_cookie(**cookie_kwargs)
             print(f"🔍 Controller: 쿠키 설정 완료 - secure={is_secure}, env={env}")
             print(f"🔍 Controller: 쿠키 값: {access_token[:20]}...")
             return response
