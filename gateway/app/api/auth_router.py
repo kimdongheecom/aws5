@@ -1,5 +1,6 @@
 # gateway/app/api/auth_router.py
 
+import os
 from fastapi import APIRouter, Cookie, HTTPException, Query, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,9 +16,11 @@ router = APIRouter()
 
 # [수정] 컨트롤러를 직접 생성하지 않음
 
+frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
 @router.get("/google/login", summary="Google 로그인 시작")
 async def google_login(
-    redirect_uri: str = Query(default="http://localhost:3000/dashboard")
+    redirect_uri: str = Query(default=f"{frontend_url}/dashboard")
 ):
     """
     Google OAuth 로그인을 시작하는 엔드포인트입니다.
