@@ -76,6 +76,37 @@ export default function EsgReport(){
     alert('PDF 다운로드 기능이 실행됩니다.');
   };
 
+  // 각 카드별 시간 상태 관리
+  const [environmentTime, setEnvironmentTime] = useState<string>('');
+  const [socialTime, setSocialTime] = useState<string>('');
+  const [governanceTime, setGovernanceTime] = useState<string>('');
+
+  // 현재 시간을 포맷팅하는 함수
+  const formatCurrentTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  // 각 카드의 적용하기 버튼 클릭 핸들러
+  const handleEnvironmentApply = () => {
+    setEnvironmentTime(formatCurrentTime());
+  };
+
+  const handleSocialApply = () => {
+    setSocialTime(formatCurrentTime());
+  };
+
+  const handleGovernanceApply = () => {
+    setGovernanceTime(formatCurrentTime());
+  };
+
   return (
     <>
       <Navigation />
@@ -135,35 +166,113 @@ export default function EsgReport(){
             <div className="space-y-10">
                 <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">ESG Highlights</h2>
 
-                <HighlightCard 
-                    icon={<Leaf size={24} />} 
-                    title="Environment" 
-                    imageSrc="/images/environmental.png"
-                    imageAlt="환경 관련 이미지"
-                    color="green"
-                >
-                    한국중부발전은 에너지 전환을 위해 국내외에서 신재생에너지 사업을 확대하고 있습니다. 미국에서는 350MW 규모의 태양광 발전사업과 국내 금융기법을 활용한 초분할형 발전사업을 추진하며 해외 시장에 진출하고 있습니다. 국내에서는 수소 생산기지와 실증센터, 블루수소 생산 플랫폼을 구축해 수소경제 기반을 마련하고, 구례 풍력발전사업을 통해 친환경 에너지 개발과 글로벌 투자 유치에 성과를 거두고 있습니다.
-                </HighlightCard>
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200/80 overflow-hidden flex flex-col lg:flex-row">
+                    <div className="lg:w-1/3 shrink-0">
+                        <div className="w-full h-48 lg:h-full bg-gray-100">
+                             <Image src="/images/environmental.png" alt="환경 관련 이미지" className="w-full h-full object-cover" width={400} height={300} />
+                        </div>
+                    </div>
+                    <div className="p-6 lg:p-8 flex flex-col">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center font-bold text-green-600">
+                                <Leaf size={24} />
+                                <h3 className="text-xl ml-2">Environment</h3>
+                            </div>
+                            {environmentTime && (
+                                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {environmentTime}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-gray-700 leading-relaxed text-sm flex-grow">
+                            한국중부발전은 에너지 전환을 위해 국내외에서 신재생에너지 사업을 확대하고 있습니다. 미국에서는 350MW 규모의 태양광 발전사업과 국내 금융기법을 활용한 초분할형 발전사업을 추진하며 해외 시장에 진출하고 있습니다. 국내에서는 수소 생산기지와 실증센터, 블루수소 생산 플랫폼을 구축해 수소경제 기반을 마련하고, 구례 풍력발전사업을 통해 친환경 에너지 개발과 글로벌 투자 유치에 성과를 거두고 있습니다.
+                        </p>
+                        {/* ADDED: Import and Apply buttons at the bottom right */}
+                        <div className="flex justify-end mt-4">
+                            <button className="text-sm font-semibold text-gray-700 hover:text-black underline mr-4">
+                                E-가져오기
+                            </button>
+                            <button 
+                                className="text-sm font-semibold text-gray-700 hover:text-black underline"
+                                onClick={handleEnvironmentApply}
+                            >
+                                E-적용하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                <HighlightCard 
-                    icon={<Users size={24} />} 
-                    title="Social" 
-                    imageSrc="/images/social.png"
-                    imageAlt="사회 관련 이미지"
-                    color="orange"
-                >
-                    한국중부발전은 임직원의 안전과 인권 보호를 위해 다양한 제도와 교육을 운영하고 있습니다. 정기·수시 안전교육을 비롯해 직무 유형별 맞춤형 교육을 강화하고 있으며, 인권침해 예방과 고충 처리를 위한 상시 시스템도 마련하고 있습니다. 또한 맞춤형 복지제도와 퇴직자 재취업 지원 프로그램을 통해 임직원의 삶의 질을 높이고, 취약계층을 위한 나눔 활동도 적극 추진하고 있습니다.
-                </HighlightCard>
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200/80 overflow-hidden flex flex-col lg:flex-row">
+                    <div className="lg:w-1/3 shrink-0">
+                        <div className="w-full h-48 lg:h-full bg-gray-100">
+                             <Image src="/images/social.png" alt="사회 관련 이미지" className="w-full h-full object-cover" width={400} height={300} />
+                        </div>
+                    </div>
+                    <div className="p-6 lg:p-8 flex flex-col">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center font-bold text-orange-600">
+                                <Users size={24} />
+                                <h3 className="text-xl ml-2">Social</h3>
+                            </div>
+                            {socialTime && (
+                                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {socialTime}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-gray-700 leading-relaxed text-sm flex-grow">
+                            한국중부발전은 임직원의 안전과 인권 보호를 위해 다양한 제도와 교육을 운영하고 있습니다. 정기·수시 안전교육을 비롯해 직무 유형별 맞춤형 교육을 강화하고 있으며, 인권침해 예방과 고충 처리를 위한 상시 시스템도 마련하고 있습니다. 또한 맞춤형 복지제도와 퇴직자 재취업 지원 프로그램을 통해 임직원의 삶의 질을 높이고, 취약계층을 위한 나눔 활동도 적극 추진하고 있습니다.
+                        </p>
+                        {/* ADDED: Import and Apply buttons at the bottom right */}
+                        <div className="flex justify-end mt-4">
+                            <button className="text-sm font-semibold text-gray-700 hover:text-black underline mr-4">
+                                S-가져오기
+                            </button>
+                            <button 
+                                className="text-sm font-semibold text-gray-700 hover:text-black underline"
+                                onClick={handleSocialApply}
+                            >
+                                S-적용하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                <HighlightCard 
-                    icon={<Shield size={24} />} 
-                    title="Governance" 
-                    imageSrc="/images/governance.png"
-                    imageAlt="거버넌스 관련 이미지"
-                    color="sky"
-                >
-                    한국중부발전은 투명하고 책임 있는 경영 강화를 위해 이사회 중심의 경영 참여를 확대하고, 비상임이사의 참여 비율을 100% 달성하였습니다. 공정한 계약제도 운영을 통해 중소기업과의 동반성장을 도모하고 있으며, 납품대금 지급도 전년 대비 향상된 100% 이행율을 기록했습니다. 또한 부패위험을 예방하기 위해 부패영향평가를 시행하고, 내부통제와 청렴 수준 향상을 위한 제도도 지속 개선하고 있습니다.
-                </HighlightCard>
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200/80 overflow-hidden flex flex-col lg:flex-row">
+                    <div className="lg:w-1/3 shrink-0">
+                        <div className="w-full h-48 lg:h-full bg-gray-100">
+                             <Image src="/images/governance.png" alt="거버넌스 관련 이미지" className="w-full h-full object-cover" width={400} height={300} />
+                        </div>
+                    </div>
+                    <div className="p-6 lg:p-8 flex flex-col">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center font-bold text-sky-600">
+                                <Shield size={24} />
+                                <h3 className="text-xl ml-2">Governance</h3>
+                            </div>
+                            {governanceTime && (
+                                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {governanceTime}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-gray-700 leading-relaxed text-sm flex-grow">
+                            한국중부발전은 투명하고 책임 있는 경영 강화를 위해 이사회 중심의 경영 참여를 확대하고, 비상임이사의 참여 비율을 100% 달성하였습니다. 공정한 계약제도 운영을 통해 중소기업과의 동반성장을 도모하고 있으며, 납품대금 지급도 전년 대비 향상된 100% 이행율을 기록했습니다. 또한 부패위험을 예방하기 위해 부패영향평가를 시행하고, 내부통제와 청렴 수준 향상을 위한 제도도 지속 개선하고 있습니다.
+                        </p>
+                        {/* ADDED: Import and Apply buttons at the bottom right */}
+                        <div className="flex justify-end mt-4">
+                            <button className="text-sm font-semibold text-gray-700 hover:text-black underline mr-4">
+                                G-가져오기
+                            </button>
+                            <button 
+                                className="text-sm font-semibold text-gray-700 hover:text-black underline"
+                                onClick={handleGovernanceApply}
+                            >
+                                G-적용하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* 주요 성과 및 계획 */}
