@@ -1082,7 +1082,7 @@ export default function GRIPage() {
     try {
       // ✅ axios를 사용하여 백엔드 API 호출
       const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const apiUrl = `${gatewayUrl}/e/v2/gri-service/samples/approve`;
+      const apiUrl = `${gatewayUrl}/e/v2/gri/samples/approve`;
       const requestBody = {
         qual_data: statementToApprove,
         disclosure_id: disclosureId,

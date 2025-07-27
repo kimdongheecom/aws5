@@ -1,8 +1,13 @@
 # entities/requirement_entity.py
 
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.common.database.model.database import Base
+
+if TYPE_CHECKING:
+    from app.domain.entity.disclosure_entity import DisclosureEntity
+    from app.domain.entity.answer_entity import AnswerEntity
 
 class RequirementEntity(Base):
     __tablename__ = "requirements"

@@ -1,8 +1,13 @@
 # entities/sample_entity.py
 
+from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, Text, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.common.database.model.database import Base    
+
+if TYPE_CHECKING:
+    from app.domain.entity.company_entity import Company
+    from app.domain.entity.disclosure_entity import DisclosureEntity
 
 class SampleEntity(Base):
     __tablename__ = "sample"

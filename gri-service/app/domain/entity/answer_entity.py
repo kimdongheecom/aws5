@@ -1,10 +1,15 @@
 # app/domain/entity/answer_entity.py
 
+from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, Text, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # [경로 수정] database.py의 새 경로에서 Base를 임포트합니다.
 from app.common.database.model.database import Base
+
+if TYPE_CHECKING:
+    from app.domain.entity.requirement_entity import RequirementEntity
+    from app.domain.entity.profile_entity import ProfileEntity
 
 class AnswerEntity(Base):
     __tablename__ = "answers"

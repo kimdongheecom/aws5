@@ -1,11 +1,13 @@
 # entities/profile_entity.py
 
-from typing import List
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.common.database.model.database import Base
 from app.domain.entity.company_entity import Company
-from app.domain.entity.answer_entity import AnswerEntity
+
+if TYPE_CHECKING:
+    from app.domain.entity.answer_entity import AnswerEntity
 
 class ProfileEntity(Base):
     __tablename__ = "profiles"

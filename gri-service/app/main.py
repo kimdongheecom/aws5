@@ -20,6 +20,17 @@ from app.domain.service.model_loader_service import model_loader_service
 # [경로 수정] database.py의 새 경로에서 engine과 Base를 임포트합니다.
 from app.common.database.model.database import engine, Base
 
+# SQLAlchemy 엔티티들을 명시적으로 import하여 순환 참조 문제를 해결합니다.
+from app.domain.entity import (
+    AnswerEntity,
+    ProfileEntity,
+    RequirementEntity,
+    SampleEntity,
+    Company,
+    DisclosureEntity,
+    CategoryEntity
+)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 [GRI-Service] API 서버 시작...")
