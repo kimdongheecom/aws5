@@ -8,8 +8,9 @@ class SampleEntity(Base):
     __tablename__ = "sample"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    qual_data: Mapped[str] = mapped_column(Text(3000), nullable=False)
-
+    # ✅ [수정] Text 타입의 길이 제한을 제거하여 Supabase와 호환성을 높입니다.
+    qual_data: Mapped[str] = mapped_column(Text, nullable=False)
+    
     # 부모(companies)를 참조하는 외래 키
     company_id: Mapped[str] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
 

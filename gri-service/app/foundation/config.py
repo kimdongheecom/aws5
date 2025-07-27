@@ -23,7 +23,7 @@ GRI_ADAPTER_CONFIG = {
     "name": "GRI 전문가",
     "description": "ESG 및 지속가능성 보고서 전문 어댑터",
     "path": "gri_adapter",
-    "enabled": True
+    "enabled": True  # 어댑터 활성화 (훈련된 모델 사용)
 }
 
 # --- 서버 설정 ---

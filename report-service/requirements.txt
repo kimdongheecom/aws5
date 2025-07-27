@@ -1,7 +1,16 @@
+# report-service/requirements.txt
+
+# Core web framework
 fastapi==0.110.0
+
+# ASGI server to run FastAPI
 uvicorn==0.27.1
-pydantic==2.6.3
+
+# For loading environment variables from .env file
 python-dotenv==1.0.1
+
+# ✅ [수정] Asynchronous ORM for database interaction
 sqlalchemy==2.0.27
-psycopg2-binary==2.9.9
-requests==2.31.0
+
+# ✅ [수정] Asynchronous driver for PostgreSQL (to connect to Supabase)
+asyncpg==0.28.0

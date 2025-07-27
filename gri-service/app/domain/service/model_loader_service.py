@@ -103,12 +103,40 @@ class ModelLoaderService:
             adapter_path = ADAPTERS_PATH / DEFAULT_ADAPTER
             if adapter_path.exists() and any(adapter_path.glob("*.safetensors")):
                 logger.info(f"🔧 기본 LoRA 어댑터 로딩 중: {DEFAULT_ADAPTER}")
+                
+                # CUDA 환경 확인
+                if torch.cuda.is_available():
+                    logger.info(f"✅ CUDA 사용 가능: {torch.cuda.get_device_name()}")
+                    logger.info(f"✅ CUDA 버전: {torch.version.cuda}")
+                else:
+                    logger.warning("⚠️ CUDA를 사용할 수 없습니다.")
+                
+                # bitsandbytes 버전 확인
+                try:
+                    import bitsandbytes as bnb
+                    logger.info(f"✅ bitsandbytes 버전: {bnb.__version__}")
+                except ImportError:
+                    logger.error("❌ bitsandbytes가 설치되지 않았습니다.")
+                    raise
+                
                 self.load_adapter(DEFAULT_ADAPTER)
                 logger.info(f"✅ 기본 어댑터 '{DEFAULT_ADAPTER}' 로딩 완료!")
             else:
-                logger.info(f"⚠️ 기본 어댑터 '{DEFAULT_ADAPTER}'가 없습니다. 베이스 모델로 시작합니다.")
+                logger.warning(f"⚠️ 기본 어댑터 '{DEFAULT_ADAPTER}'가 없습니다. 베이스 모델로 시작합니다.")
+                logger.warning(f"⚠️ 어댑터 경로: {adapter_path}")
         except Exception as e:
-            logger.warning(f"⚠️ 기본 어댑터 로딩 실패, 베이스 모델 사용: {e}")
+            logger.error(f"❌ 기본 어댑터 로딩 실패: {e}")
+            logger.error(f"❌ 상세 오류: {traceback.format_exc()}")
+            
+            # CUDA 관련 오류인 경우 추가 정보 제공
+            if "CUDA" in str(e) or "bitsandbytes" in str(e):
+                logger.error("🔧 CUDA/bitsandbytes 문제 해결 방법:")
+                logger.error("1. Docker 컨테이너를 재빌드하세요: docker-compose build gri-service")
+                logger.error("2. bitsandbytes 버전을 확인하세요: pip show bitsandbytes")
+                logger.error("3. CUDA 라이브러리 경로를 확인하세요: echo $LD_LIBRARY_PATH")
+            
+            logger.warning("⚠️ 베이스 모델로 계속 진행합니다.")
+            self.current_adapter = None
 
     def load_adapter(self, adapter_name: str):
         if not self._check_peft_available():

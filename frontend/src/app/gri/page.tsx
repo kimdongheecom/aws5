@@ -1066,16 +1066,73 @@ export default function GRIPage() {
   };
 
   // 최종 승인 핸들러
-  const handleApproveStatement = (disclosureId) => {
-    const today = new Date().toISOString().split('T')[0];
-    setApprovedStatements(prev => ({
-      ...prev,
-      [disclosureId]: {
-        approvedDate: today,
-        status: 'final'
+  const handleApproveStatement = async (disclosureId) => {
+    // 저장할 문장을 editedStatements 상태에서 가져옵니다.
+    const statementToApprove = editedStatements[disclosureId];
+
+    if (!statementToApprove) {
+      alert('저장할 문장이 없습니다. 문장을 생성하거나 수정한 후 시도해주세요.');
+      return;
+    }
+
+    if (!confirm(`'${disclosureId}' 항목에 대한 문장을 최종 승인하고 저장하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      // ✅ axios를 사용하여 백엔드 API 호출
+      const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const apiUrl = `${gatewayUrl}/e/v2/gri-service/samples/approve`;
+      const requestBody = {
+        qual_data: statementToApprove,
+        disclosure_id: disclosureId,
+        company_id: 'KOMIPO'
+      };
+      const response = await axios.post(apiUrl, requestBody, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // API 호출이 성공하면, 반환된 데이터를 콘솔에 출력
+      console.log('성공적으로 저장되었습니다:', response.data);
+      
+      // 프론트엔드의 상태를 '최종 승인됨'으로 업데이트하여 UI에 즉시 반영
+      const today = new Date().toISOString().split('T')[0];
+      setApprovedStatements(prev => ({
+        ...prev,
+        [disclosureId]: {
+          status: 'final',
+          approvedDate: today
+        }
+      }));
+
+      alert(`'${disclosureId}' 항목이 성공적으로 최종 승인 및 저장되었습니다.`);
+
+    } catch (error) {
+      console.error('최종 승인 처리 중 오류 발생:', error);
+      let errorMessage = '알 수 없는 오류가 발생했습니다.';
+      // axios 에러 객체를 사용하여 더 상세한 에러 메시지 추출
+      if (axios.isAxiosError && axios.isAxiosError(error)) {
+        if (error.response && error.response.data) {
+          errorMessage = error.response.data.detail || JSON.stringify(error.response.data);
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch {
+          errorMessage = '서버에서 오류가 발생했습니다.';
+        }
       }
-    }));
-    alert(`${disclosureId} Suggested Statement가 최종 승인되었습니다.`);
+      alert(`오류가 발생하여 저장에 실패했습니다: ${errorMessage}`);
+    }
   };
 
   // Requirements 답변을 기반으로 Suggested Statement 생성
