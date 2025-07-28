@@ -2017,7 +2017,7 @@ export default function GRIPage() {
               </a>
               <div className="p-4 border border-gray-200 rounded-lg">
                 <h3 className="font-semibold text-gray-800">AI 모델 정보</h3>
-                <p className="text-sm text-gray-600">Llama3 기반 GRI 분석 엔진 활용</p>
+                <p className="text-sm text-gray-600">KoAlpaca 기반 GRI 분석 엔진 활용</p>
               </div>
             </div>
           </div>
