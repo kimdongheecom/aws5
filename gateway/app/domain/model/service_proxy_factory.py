@@ -51,25 +51,8 @@ class ServiceProxyFactory:
                     params=params
                 )
                 
-                # CORS 헤더를 백엔드 서비스 응답에 추가
-                response_headers = dict(response.headers)
-                response_headers.update({
-                    'Access-Control-Allow-Origin': headers_to_send.get('Origin', '*'),
-                    'Access-Control-Allow-Credentials': 'true',
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-                })
-                
-                # 수정된 헤더로 새로운 Response 객체 생성
-                modified_response = httpx.Response(
-                    status_code=response.status_code,
-                    headers=response_headers,
-                    content=response.content,
-                    request=response.request
-                )
-                
                 logger.info(f"✅  Response from {url}: {response.status_code}")
-                return modified_response
+                return response
 
         except httpx.RequestError as e:
             error_traceback = traceback.format_exc()

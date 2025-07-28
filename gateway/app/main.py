@@ -68,6 +68,23 @@ async def health_check():
     logger.info("헬스 체크 요청 수신")
     return {"status": "healthy!"}
 
+@proxy_router.options("/{service}/{path:path}", summary="OPTIONS 프록시")
+async def proxy_options(service: ServiceType, path: str, request: Request):
+    """OPTIONS 요청을 처리합니다 (CORS preflight)."""
+    logger.info(f"[PROXY >>] Method: OPTIONS, Service: {service.value}, Path: /{path}")
+    
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    
+    return Response(
+        status_code=200,
+        headers={
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+        }
+    )
+
 @proxy_router.get("/{service}/{path:path}", summary="GET 프록시")
 async def proxy_get(service: ServiceType, path: str, request: Request):
     """GET 요청을 내부 서비스로 프록시합니다."""
@@ -84,8 +101,18 @@ async def proxy_get(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
+    # CORS 헤더를 명시적으로 추가
+    response_headers = dict(response.headers)
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    response_headers.update({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+    })
+    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
 
 @proxy_router.post("/{service}/{path:path}", summary="POST 프록시")
 async def proxy_post(service: ServiceType, path: str, request: Request):
@@ -105,8 +132,18 @@ async def proxy_post(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
+    # CORS 헤더를 명시적으로 추가
+    response_headers = dict(response.headers)
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    response_headers.update({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+    })
+    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
 
 @proxy_router.put("/{service}/{path:path}", summary="PUT 프록시")
 async def proxy_put(service: ServiceType, path: str, request: Request):
@@ -126,8 +163,18 @@ async def proxy_put(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
+    # CORS 헤더를 명시적으로 추가
+    response_headers = dict(response.headers)
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    response_headers.update({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+    })
+    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
 
 @proxy_router.delete("/{service}/{path:path}", summary="DELETE 프록시")
 async def proxy_delete(service: ServiceType, path: str, request: Request):
@@ -147,8 +194,18 @@ async def proxy_delete(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
+    # CORS 헤더를 명시적으로 추가
+    response_headers = dict(response.headers)
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    response_headers.update({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+    })
+    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
 
 @proxy_router.patch("/{service}/{path:path}", summary="PATCH 프록시")
 async def proxy_patch(service: ServiceType, path: str, request: Request):
@@ -168,8 +225,18 @@ async def proxy_patch(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
+    # CORS 헤더를 명시적으로 추가
+    response_headers = dict(response.headers)
+    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
+    response_headers.update({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+    })
+    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
+    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
 # --- ▲▲▲▲▲ 여기까지 수정 ▲▲▲▲▲ ---
 
 
