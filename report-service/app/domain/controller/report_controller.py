@@ -16,6 +16,7 @@ class ReportController:
         """
         report_repo = ReportRepository(session=db)
         report_service = ReportService(report_repository=report_repo)
+        print(f"company_id: {company_id}, disclosure_id: {disclosure_id}")
         
         # 서비스 계층 호출
         qual_data = await report_service.fetch_qual_data(
