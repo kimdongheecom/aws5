@@ -70,7 +70,7 @@ export default function EsgReport(){
       setter: React.Dispatch<React.SetStateAction<string>>
   ) => {
       const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const apiUrl = `${gatewayUrl}/e/v2/report/report/qual-data`;
+      const apiUrl = `${gatewayUrl}/e/v2/report/qual-data`;
       
       setter("데이터를 불러오는 중..."); // 사용자에게 로딩 중임을 알립니다.
 
