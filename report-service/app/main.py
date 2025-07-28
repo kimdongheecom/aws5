@@ -52,7 +52,7 @@ app.add_middleware(
 
 # --- 4. 라우터 등록 ---
 # 게이트웨이를 통해 /e/v2/report/qual-data 로 요청이 들어옵니다.
-app.include_router(report_router.router,tags=["Reports"])
+app.include_router(report_router.router, prefix="/report", tags=["Reports"])
 
 # --- 5. 헬스 체크 엔드포인트 ---
 @app.get("/health", tags=["Monitoring"])

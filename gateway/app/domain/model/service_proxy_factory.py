@@ -29,11 +29,27 @@ class ServiceProxyFactory:
     ) -> httpx.Response:
         """
         백엔드 서비스로 실제 요청을 보내는 메소드.
-        URL을 base_url + path 형태로 구성합니다.
+        서비스별 내부 경로(prefix)를 여기서 관리합니다.
         """
-        # 🚨 수정된 부분: base_url과 path를 직접 결합하여 최종 URL 생성
-        # 예: (base_url: http://localhost:8010, path: generate) -> http://localhost:8010/generate
-        url = f"{self.base_url}/{path}"
+        
+        # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        # 🚨 [핵심 수정] 이 부분이 수정/추가된 로직입니다.
+        # 서비스 종류에 따라 최종 경로를 다르게 조립합니다.
+        # -------------------------------------------------------------------
+        final_path = f"/{path}" # 기본 경로는 /path
+
+        if self.service_type == ServiceType.REPORT:
+            # report-service는 내부적으로 /report prefix를 사용하므로 붙여줍니다.
+            final_path = f"/report/{path}"
+        
+        # 예시: 만약 다른 서비스도 내부 prefix가 있다면 여기에 추가할 수 있습니다.
+        # elif self.service_type == ServiceType.COMPANY:
+        #     final_path = f"/company-api/{path}"
+        # -------------------------------------------------------------------
+        # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        # 최종 URL 조합 (path 대신 final_path 사용)
+        url = f"{self.base_url}{final_path}"
         logger.info(f"🎯  Forwarding request: {method} {url}")
 
         # 전달된 헤더가 Content-Type을 포함하지 않을 경우, 기본값을 application/json으로 설정
@@ -45,7 +61,7 @@ class ServiceProxyFactory:
             async with httpx.AsyncClient(timeout=300.0) as client: # AI 모델 추론을 위해 타임아웃 5분으로 증가
                 response = await client.request(
                     method=method.upper(),
-                    url=url,
+                    url=url, # 수정된 경로가 포함된 url 사용
                     headers=headers_to_send,
                     content=body,
                     params=params

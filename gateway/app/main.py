@@ -54,8 +54,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,             # 쿠키 기반 인증에 필수
-    allow_methods=["*"],                # 모든 HTTP 메소드 허용
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # 명시적으로 허용할 메소드
     allow_headers=["*"],                # 모든 HTTP 헤더 허용
+    expose_headers=["*"],               # 모든 헤더 노출
 )
 
 
@@ -101,18 +102,8 @@ async def proxy_get(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
-    # CORS 헤더를 명시적으로 추가
-    response_headers = dict(response.headers)
-    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
-    response_headers.update({
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-    })
-    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
 
 @proxy_router.post("/{service}/{path:path}", summary="POST 프록시")
 async def proxy_post(service: ServiceType, path: str, request: Request):
@@ -132,18 +123,8 @@ async def proxy_post(service: ServiceType, path: str, request: Request):
         params=dict(request.query_params)
     )
     
-    # CORS 헤더를 명시적으로 추가
-    response_headers = dict(response.headers)
-    origin = request.headers.get('Origin', 'https://www.kimdonghee.com')
-    response_headers.update({
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-    })
-    
     logger.info(f"[PROXY <<] Status: {response.status_code}, Service: {service.value}, Path: /{path}")
-    return Response(content=response.content, status_code=response.status_code, headers=response_headers)
+    return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))
 
 @proxy_router.put("/{service}/{path:path}", summary="PUT 프록시")
 async def proxy_put(service: ServiceType, path: str, request: Request):
