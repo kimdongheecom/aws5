@@ -51,11 +51,18 @@ class ServiceProxyFactory:
         # 최종 URL 조합 (path 대신 final_path 사용)
         url = f"{self.base_url}{final_path}"
         logger.info(f"🎯  Forwarding request: {method} {url}")
+        logger.info(f"🔍  Service Type: {self.service_type.value}")
+        logger.info(f"🔍  Base URL: {self.base_url}")
+        logger.info(f"🔍  Original Path: {path}")
+        logger.info(f"🔍  Final Path: {final_path}")
+        logger.info(f"🔍  Full URL: {url}")
 
         # 전달된 헤더가 Content-Type을 포함하지 않을 경우, 기본값을 application/json으로 설정
         headers_to_send = headers.copy() if headers else {}
         if 'content-type' not in (key.lower() for key in headers_to_send.keys()):
             headers_to_send['Content-Type'] = 'application/json'
+        
+        logger.info(f"🔍  Request Headers: {headers_to_send}")
 
         try:
             async with httpx.AsyncClient(timeout=300.0) as client: # AI 모델 추론을 위해 타임아웃 5분으로 증가
@@ -68,6 +75,8 @@ class ServiceProxyFactory:
                 )
                 
                 logger.info(f"✅  Response from {url}: {response.status_code}")
+                logger.info(f"🔍  Response Headers: {dict(response.headers)}")
+                logger.info(f"🔍  Response Content Length: {len(response.content)}")
                 return response
 
         except httpx.RequestError as e:

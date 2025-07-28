@@ -50,6 +50,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logger.info(f"🔍  CORS Origins configured: {origins}")
+
 # --- 4. 라우터 등록 ---
 # 게이트웨이를 통해 /e/v2/report/qual-data 로 요청이 들어옵니다.
 app.include_router(report_router.router, prefix="/report", tags=["Reports"])
@@ -60,6 +62,19 @@ async def health_check():
     db_ok = await test_connection()
     status = "healthy" if db_ok else "unhealthy"
     return {"status": status, "service": "report-service", "database_connected": db_ok}
+
+# --- 6. 요청 로깅 미들웨어 ---
+@app.middleware("http")
+async def log_requests(request, call_next):
+    logger.info(f"📥  Incoming request: {request.method} {request.url}")
+    logger.info(f"🔍  Request headers: {dict(request.headers)}")
+    
+    response = await call_next(request)
+    
+    logger.info(f"📤  Outgoing response: {response.status_code}")
+    logger.info(f"🔍  Response headers: {dict(response.headers)}")
+    
+    return response
 
 # --- 6. 서버 실행 (로컬 테스트용) ---
 if __name__ == "__main__":
