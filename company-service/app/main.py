@@ -40,12 +40,16 @@ app = FastAPI(
 )
 
 # --- 3. CORS 미들웨어 설정 ---
-# 게이트웨이를 통해 요청이 오므로, 게이트웨이 주소를 허용하거나
-# 개발 환경의 프론트엔드 주소를 직접 허용할 수 있습니다.
-# 여기서는 모든 출처를 허용하는 것으로 간단하게 설정합니다.
+# 게이트웨이를 통한 요청이므로 게이트웨이 주소를 허용
+origins = [
+    "http://localhost:8080",             # 로컬 게이트웨이
+    "http://gateway:8080",               # Docker 내부 게이트웨이
+    "https://aws5-production.up.railway.app",  # 프로덕션 게이트웨이
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # 보안을 위해 실제 프로덕션에서는 특정 도메인만 허용
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

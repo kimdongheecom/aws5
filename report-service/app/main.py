@@ -35,9 +35,16 @@ app = FastAPI(
 )
 
 # --- 3. CORS 미들웨어 설정 ---
+# 게이트웨이를 통한 요청이므로 게이트웨이 주소를 허용
+origins = [
+    "http://localhost:8080",             # 로컬 게이트웨이
+    "http://gateway:8080",               # Docker 내부 게이트웨이
+    "https://aws5-production.up.railway.app",  # 프로덕션 게이트웨이
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
